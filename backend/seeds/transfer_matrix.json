@@ -1,0 +1,104 @@
+[
+  {
+    "source_skill": "SQL Queries",
+    "target_skill": "Pandas Merge/Join",
+    "transfer_coefficient": 0.45,
+    "explanation": "SQL JOIN syntax (INNER JOIN, LEFT JOIN, ON clause) maps directly to pd.merge(how=..., on=...). Your GROUP BY becomes df.groupby(), WHERE becomes boolean indexing."
+  },
+  {
+    "source_skill": "SQL Queries",
+    "target_skill": "Data Cleaning",
+    "transfer_coefficient": 0.20,
+    "explanation": "NULL handling in SQL (IS NULL, COALESCE) transfers to pandas isnull(), fillna(), and dropna() patterns."
+  },
+  {
+    "source_skill": "OOP in Python",
+    "target_skill": "PyTorch Basics",
+    "transfer_coefficient": 0.30,
+    "explanation": "PyTorch models are Python classes inheriting nn.Module. The __init__() and forward() pattern is the same OOP you already know."
+  },
+  {
+    "source_skill": "NumPy Arrays",
+    "target_skill": "PyTorch Basics",
+    "transfer_coefficient": 0.40,
+    "explanation": "PyTorch tensors are NumPy arrays with autograd. Reshape, broadcasting, slicing, and elementwise operations work identically."
+  },
+  {
+    "source_skill": "Linear Regression",
+    "target_skill": "Logistic Regression",
+    "transfer_coefficient": 0.60,
+    "explanation": "Same gradient descent optimization, same regularization logic. Only the output activation (sigmoid) and loss (cross-entropy vs MSE) differ."
+  },
+  {
+    "source_skill": "Decision Trees",
+    "target_skill": "Random Forests",
+    "transfer_coefficient": 0.70,
+    "explanation": "Random Forest is an ensemble of the Decision Trees you already understand, with bagging. You know 70% of it before reading a single page."
+  },
+  {
+    "source_skill": "Probability Theory",
+    "target_skill": "Statistical Distributions",
+    "transfer_coefficient": 0.50,
+    "explanation": "Probability distributions ARE probability theory applied to specific random variables. Your foundation of events, sample spaces, and axioms directly supports this."
+  },
+  {
+    "source_skill": "Statistical Distributions",
+    "target_skill": "Hypothesis Testing",
+    "transfer_coefficient": 0.55,
+    "explanation": "p-values are computed from the CDF of distributions you already know. The t-test uses the t-distribution, chi-square uses chi-square distribution — you already have the tools."
+  },
+  {
+    "source_skill": "Python Basics",
+    "target_skill": "NumPy Arrays",
+    "transfer_coefficient": 0.25,
+    "explanation": "Python loop patterns and list indexing directly map to NumPy vectorized operations. Your mental model of iteration transfers."
+  },
+  {
+    "source_skill": "Gradient Descent Intuition",
+    "target_skill": "Backpropagation",
+    "transfer_coefficient": 0.55,
+    "explanation": "Backpropagation IS gradient descent, computed via the chain rule through layers. If you understand loss surfaces and gradient steps, you understand 55% of backprop already."
+  },
+  {
+    "source_skill": "Linear Algebra Basics",
+    "target_skill": "Neural Network Basics",
+    "transfer_coefficient": 0.40,
+    "explanation": "Neural networks are sequences of matrix multiplications followed by activations. A forward pass IS linear algebra."
+  },
+  {
+    "source_skill": "Random Forests",
+    "target_skill": "Gradient Boosting",
+    "transfer_coefficient": 0.50,
+    "explanation": "Both are tree ensemble methods. RF uses parallel bagging; GB uses sequential boosting. Your RF intuition about tree splits and feature importance transfers directly."
+  },
+  {
+    "source_skill": "Logistic Regression",
+    "target_skill": "Decision Trees",
+    "transfer_coefficient": 0.30,
+    "explanation": "Both are supervised classifiers optimizing a decision boundary. Understanding probability outputs and overfitting from Logistic Regression helps with Decision Tree concepts."
+  },
+  {
+    "source_skill": "Matrix Operations",
+    "target_skill": "PCA",
+    "transfer_coefficient": 0.55,
+    "explanation": "PCA is eigendecomposition of the covariance matrix — a direct application of matrix operations you already understand."
+  },
+  {
+    "source_skill": "Pandas DataFrames",
+    "target_skill": "Data Cleaning",
+    "transfer_coefficient": 0.35,
+    "explanation": "You already know the DataFrame API. Data cleaning IS using that API — isnull(), fillna(), drop_duplicates(), astype() are just Pandas operations."
+  },
+  {
+    "source_skill": "Linear Regression",
+    "target_skill": "Feature Engineering",
+    "transfer_coefficient": 0.25,
+    "explanation": "Understanding how linear models work (coefficients, multicollinearity) informs what features to create and how to transform them."
+  },
+  {
+    "source_skill": "Cross Validation",
+    "target_skill": "Hyperparameter Tuning",
+    "transfer_coefficient": 0.45,
+    "explanation": "GridSearchCV and RandomSearchCV wrap cross-validation — you already understand the evaluation loop. Hyperparameter tuning just adds a search loop around it."
+  }
+]

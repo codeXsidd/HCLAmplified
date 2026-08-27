@@ -1,0 +1,54 @@
+{
+  "Python Basics": {
+    "alpha": 25, "beta_param": 2, "half_life_days": 90, "days_ago": 2,
+    "practice_count": 30
+  },
+  "Data Structures": {
+    "alpha": 20, "beta_param": 3, "half_life_days": 60, "days_ago": 5,
+    "practice_count": 20
+  },
+  "OOP in Python": {
+    "alpha": 18, "beta_param": 4, "half_life_days": 45, "days_ago": 7,
+    "practice_count": 15
+  },
+  "Error Handling": {
+    "alpha": 12, "beta_param": 2, "half_life_days": 40, "days_ago": 10,
+    "practice_count": 10
+  },
+  "File I/O": {
+    "alpha": 14, "beta_param": 3, "half_life_days": 35, "days_ago": 12,
+    "practice_count": 8
+  },
+  "Virtual Environments": {
+    "alpha": 10, "beta_param": 2, "half_life_days": 60, "days_ago": 20,
+    "practice_count": 5
+  },
+  "Probability Theory": {
+    "alpha": 8, "beta_param": 4, "half_life_days": 20, "days_ago": 30,
+    "practice_count": 6
+  },
+  "Statistical Distributions": {
+    "alpha": 6, "beta_param": 5, "half_life_days": 14, "days_ago": 45,
+    "practice_count": 4
+  },
+  "Matplotlib Basics": {
+    "alpha": 9, "beta_param": 3, "half_life_days": 25, "days_ago": 20,
+    "practice_count": 7
+  },
+  "SQL Queries": {
+    "alpha": 14, "beta_param": 3, "half_life_days": 15, "days_ago": 60,
+    "practice_count": 10
+  },
+  "Hypothesis Testing": {
+    "alpha": 7, "beta_param": 4, "half_life_days": 10, "days_ago": 40,
+    "practice_count": 4
+  },
+  "Linear Algebra Basics": {
+    "alpha": 3, "beta_param": 6, "half_life_days": 7, "days_ago": 90,
+    "self_assessed_confidence": 0.78, "practice_count": 2
+  },
+  "NumPy Arrays": {
+    "alpha": 4, "beta_param": 5, "half_life_days": 10, "days_ago": 60,
+    "self_assessed_confidence": 0.82, "practice_count": 3
+  }
+}

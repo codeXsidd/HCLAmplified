@@ -1,0 +1,410 @@
+[
+  {
+    "id": "la-001",
+    "skill_name": "Linear Algebra Basics",
+    "item_type": "mcq",
+    "difficulty": 0.55,
+    "content": {
+      "question": "What does it mean for two vectors u and v to be orthogonal?",
+      "options": [
+        "Their dot product equals zero",
+        "They have the same magnitude",
+        "They point in the same direction",
+        "Their cross product equals zero"
+      ],
+      "correct_answer": 0,
+      "explanation": "Orthogonal vectors have a dot product of zero, meaning they are perpendicular. Same magnitude just means equal length (not direction). Cross product zero means parallel, not perpendicular."
+    }
+  },
+  {
+    "id": "la-002",
+    "skill_name": "Linear Algebra Basics",
+    "item_type": "mcq",
+    "difficulty": 0.65,
+    "content": {
+      "question": "If matrix A has shape (3, 4) and matrix B has shape (4, 2), what is the shape of the result of A @ B?",
+      "options": [
+        "(3, 2)",
+        "(4, 4)",
+        "(3, 4)",
+        "(2, 3)"
+      ],
+      "correct_answer": 0,
+      "explanation": "Matrix multiplication (m×k) @ (k×n) produces (m×n). So (3×4) @ (4×2) = (3×2). The inner dimensions must match and the outer dimensions form the result shape."
+    }
+  },
+  {
+    "id": "la-003",
+    "skill_name": "Linear Algebra Basics",
+    "item_type": "mcq",
+    "difficulty": 0.70,
+    "content": {
+      "question": "A neural network layer computes output = W @ x + b. If W has shape (128, 64) and x is a single sample vector, what shape must x have?",
+      "options": [
+        "(64,) — a vector of 64 features",
+        "(128,) — must match output dimension",
+        "(1, 128) — a row vector",
+        "(64, 64) — a square matrix"
+      ],
+      "correct_answer": 0,
+      "explanation": "W has 64 columns, so x must have 64 rows (elements). W @ x computes a weighted sum across 64 input features to produce 128 output features. This is the core linear algebra of neural network layers."
+    }
+  },
+  {
+    "id": "np-001",
+    "skill_name": "NumPy Arrays",
+    "item_type": "mcq",
+    "difficulty": 0.50,
+    "content": {
+      "question": "What does np.array([1, 2, 3]) + np.array([10, 20, 30]) produce?",
+      "options": [
+        "array([11, 22, 33])",
+        "array([1, 2, 3, 10, 20, 30])",
+        "array([10, 40, 90])",
+        "A TypeError — you cannot add arrays"
+      ],
+      "correct_answer": 0,
+      "explanation": "NumPy performs element-wise addition by default. [1+10, 2+20, 3+30] = [11, 22, 33]. This is broadcasting with equal shapes."
+    }
+  },
+  {
+    "id": "np-002",
+    "skill_name": "NumPy Arrays",
+    "item_type": "mcq",
+    "difficulty": 0.65,
+    "content": {
+      "question": "Given a = np.array([[1,2],[3,4],[5,6]]), what is a[:, 1]?",
+      "options": [
+        "array([2, 4, 6]) — all rows, second column",
+        "array([3, 4]) — second row",
+        "array([1, 3, 5]) — first column",
+        "array([[2],[4],[6]]) — a 2D column"
+      ],
+      "correct_answer": 0,
+      "explanation": "a[:, 1] means 'all rows (:), column index 1'. This selects the second column: [2, 4, 6]. This is the fundamental NumPy 2D slicing syntax."
+    }
+  },
+  {
+    "id": "np-003",
+    "skill_name": "NumPy Arrays",
+    "item_type": "mcq",
+    "difficulty": 0.70,
+    "content": {
+      "question": "You have a = np.array([3, 1, 4, 1, 5, 9]). Which operation returns indices of values greater than 3?",
+      "options": [
+        "np.where(a > 3)",
+        "a.filter(lambda x: x > 3)",
+        "a[a > 3].index()",
+        "np.find(a, condition=a>3)"
+      ],
+      "correct_answer": 0,
+      "explanation": "np.where(condition) returns a tuple of arrays of indices where condition is True. np.where(a > 3) returns (array([2, 4, 5]),) — indices of 4, 5, and 9."
+    }
+  },
+  {
+    "id": "sql-001",
+    "skill_name": "SQL Queries",
+    "item_type": "mcq",
+    "difficulty": 0.50,
+    "content": {
+      "question": "You want all orders from customers in 'California' AND with order_value > 100. Which query is correct?",
+      "options": [
+        "SELECT * FROM orders WHERE state='CA' AND order_value > 100",
+        "SELECT * FROM orders WHERE state='CA' OR order_value > 100",
+        "SELECT * FROM orders HAVING state='CA' AND order_value > 100",
+        "SELECT * FROM orders FILTER BY state='CA' AND order_value > 100"
+      ],
+      "correct_answer": 0,
+      "explanation": "WHERE with AND filters rows meeting both conditions. OR would include any row meeting either condition. HAVING is for aggregate conditions. FILTER is not standard SQL."
+    }
+  },
+  {
+    "id": "sql-002",
+    "skill_name": "SQL Queries",
+    "item_type": "mcq",
+    "difficulty": 0.65,
+    "content": {
+      "question": "What type of JOIN returns all rows from the LEFT table, with NULLs for non-matching rows from the RIGHT table?",
+      "options": [
+        "LEFT JOIN",
+        "INNER JOIN",
+        "FULL OUTER JOIN",
+        "CROSS JOIN"
+      ],
+      "correct_answer": 0,
+      "explanation": "LEFT JOIN returns all rows from the left table. Where no match exists in the right table, NULL is placed. INNER JOIN only returns matched rows. FULL OUTER JOIN returns all rows from both. CROSS JOIN returns the cartesian product."
+    }
+  },
+  {
+    "id": "sql-003",
+    "skill_name": "SQL Queries",
+    "item_type": "mcq",
+    "difficulty": 0.70,
+    "content": {
+      "question": "You want the average order value per customer, but only for customers with more than 5 orders. What clause do you use to filter after GROUP BY?",
+      "options": [
+        "HAVING COUNT(*) > 5",
+        "WHERE COUNT(*) > 5",
+        "FILTER COUNT(*) > 5",
+        "GROUP BY ... LIMIT 5"
+      ],
+      "correct_answer": 0,
+      "explanation": "HAVING filters groups after aggregation. WHERE filters rows before aggregation and cannot reference aggregate functions like COUNT(*). This is a critical distinction in SQL."
+    }
+  },
+  {
+    "id": "pandas-001",
+    "skill_name": "Pandas Merge/Join",
+    "item_type": "mcq",
+    "difficulty": 0.55,
+    "content": {
+      "question": "To perform a LEFT JOIN of df_orders onto df_customers on 'customer_id', which code is correct?",
+      "options": [
+        "pd.merge(df_orders, df_customers, on='customer_id', how='left')",
+        "pd.merge(df_customers, df_orders, on='customer_id', how='left')",
+        "df_orders.join(df_customers, on='customer_id')",
+        "df_orders.merge(df_customers, left_on='id', how='inner')"
+      ],
+      "correct_answer": 0,
+      "explanation": "pd.merge(left_df, right_df, on=key, how='left') preserves all rows of left_df. Putting orders first ensures all orders are kept, with NULL where no matching customer exists."
+    }
+  },
+  {
+    "id": "prob-001",
+    "skill_name": "Probability Theory",
+    "item_type": "mcq",
+    "difficulty": 0.55,
+    "content": {
+      "question": "A spam filter is 95% accurate on spam and 99% accurate on non-spam. If 1% of emails are spam, what does Bayes' theorem tell us to expect about the false positive rate?",
+      "options": [
+        "Even high accuracy models can have poor precision when the base rate is low",
+        "The model is wrong on 5% + 1% = 6% of emails",
+        "With 95% accuracy, most flagged emails are truly spam",
+        "The accuracy percentages directly give us precision"
+      ],
+      "correct_answer": 0,
+      "explanation": "With 1% base rate: of 1000 emails, 10 are spam (9.5 correctly caught) and 990 are non-spam (9.9 wrongly flagged). So ~50% of flagged emails are false positives despite high accuracy. This is the base rate fallacy — Bayes' theorem makes this precise."
+    }
+  },
+  {
+    "id": "prob-002",
+    "skill_name": "Probability Theory",
+    "item_type": "mcq",
+    "difficulty": 0.50,
+    "content": {
+      "question": "If P(A) = 0.4, P(B) = 0.3, and A and B are independent, what is P(A and B)?",
+      "options": [
+        "0.12",
+        "0.70",
+        "0.58",
+        "Cannot determine without more information"
+      ],
+      "correct_answer": 0,
+      "explanation": "For independent events, P(A and B) = P(A) × P(B) = 0.4 × 0.3 = 0.12. Independence is what makes the joint probability simply the product of marginals."
+    }
+  },
+  {
+    "id": "py-001",
+    "skill_name": "Python Basics",
+    "item_type": "mcq",
+    "difficulty": 0.30,
+    "content": {
+      "question": "What does the following code print? x = [1, 2, 3]; y = x; y.append(4); print(len(x))",
+      "options": [
+        "4 — because y and x reference the same list",
+        "3 — because y is a copy of x",
+        "Error — cannot append to a variable",
+        "0 — the list is reassigned"
+      ],
+      "correct_answer": 0,
+      "explanation": "In Python, y = x does NOT copy the list. Both y and x reference the same list object in memory. Mutating y (append) mutates x. To copy, use y = x.copy() or y = x[:]."
+    }
+  },
+  {
+    "id": "py-002",
+    "skill_name": "Python Basics",
+    "item_type": "mcq",
+    "difficulty": 0.40,
+    "content": {
+      "question": "What is the output of: [x**2 for x in range(5) if x % 2 == 0]?",
+      "options": [
+        "[0, 4, 16]",
+        "[0, 1, 4, 9, 16]",
+        "[4, 16]",
+        "[0, 4, 16, 36, 64]"
+      ],
+      "correct_answer": 0,
+      "explanation": "range(5) = [0,1,2,3,4]. Filter even numbers (x % 2 == 0): [0,2,4]. Square them: [0,4,16]. This is a filtered list comprehension."
+    }
+  },
+  {
+    "id": "gd-001",
+    "skill_name": "Gradient Descent Intuition",
+    "item_type": "mcq",
+    "difficulty": 0.60,
+    "content": {
+      "question": "In gradient descent, what happens if the learning rate is set too high?",
+      "options": [
+        "The optimizer may overshoot the minimum and diverge",
+        "Training will be slower but always converge",
+        "The model will underfit permanently",
+        "Gradients will become exactly zero"
+      ],
+      "correct_answer": 0,
+      "explanation": "A high learning rate causes large parameter updates that can overshoot the loss minimum, causing the loss to oscillate or diverge. Too low a learning rate causes slow convergence or getting stuck in local minima."
+    }
+  },
+  {
+    "id": "gd-002",
+    "skill_name": "Gradient Descent Intuition",
+    "item_type": "mcq",
+    "difficulty": 0.65,
+    "content": {
+      "question": "The gradient of the loss with respect to a parameter tells us:",
+      "options": [
+        "The direction of steepest increase in loss — we move opposite to decrease it",
+        "The exact parameter value that minimizes loss",
+        "The learning rate to use for that parameter",
+        "The second derivative needed for Newton's method"
+      ],
+      "correct_answer": 0,
+      "explanation": "The gradient points in the direction of steepest ascent. Gradient DESCENT moves parameters in the NEGATIVE gradient direction (downhill). This is why the update is: theta = theta - lr * gradient."
+    }
+  },
+  {
+    "id": "nn-001",
+    "skill_name": "Neural Network Basics",
+    "item_type": "mcq",
+    "difficulty": 0.60,
+    "content": {
+      "question": "Why do neural networks use non-linear activation functions like ReLU?",
+      "options": [
+        "Without them, a deep network collapses to a single linear transformation",
+        "To make gradients larger during backpropagation",
+        "Because linear activations are computationally expensive",
+        "To prevent the network from memorizing training data"
+      ],
+      "correct_answer": 0,
+      "explanation": "A composition of linear functions is still linear. Without non-linearity, a 100-layer network is equivalent to a single layer: W_n @ ... @ W_1 @ x = W_combined @ x. Non-linear activations allow the network to learn complex, non-linear decision boundaries."
+    }
+  },
+  {
+    "id": "nn-002",
+    "skill_name": "Neural Network Basics",
+    "item_type": "mcq",
+    "difficulty": 0.65,
+    "content": {
+      "question": "A network has layers of size [784, 128, 64, 10]. What is the total number of weight parameters (ignoring biases)?",
+      "options": [
+        "784×128 + 128×64 + 64×10 = 109,056",
+        "784 + 128 + 64 + 10 = 986",
+        "784×128×64×10 = 51,380,224",
+        "128 + 64 + 10 = 202"
+      ],
+      "correct_answer": 0,
+      "explanation": "Each fully-connected layer has (input_size × output_size) weights. Layer 1: 784×128=100,352. Layer 2: 128×64=8,192. Layer 3: 64×10=640. Total: 109,184. This is the fundamental count of parameters in dense layers."
+    }
+  },
+  {
+    "id": "dt-001",
+    "skill_name": "Decision Trees",
+    "item_type": "mcq",
+    "difficulty": 0.55,
+    "content": {
+      "question": "A Decision Tree with max_depth=None tends to:",
+      "options": [
+        "Overfit — it memorizes training data by creating pure leaf nodes",
+        "Underfit — too few splits to capture patterns",
+        "Always achieve 100% test accuracy",
+        "Use Gini impurity only, never entropy"
+      ],
+      "correct_answer": 0,
+      "explanation": "Without depth limits, a Decision Tree can create leaves containing just one training sample (pure nodes). This perfectly fits training data but generalizes poorly. Limiting max_depth or min_samples_split is the primary regularization technique."
+    }
+  },
+  {
+    "id": "dt-002",
+    "skill_name": "Decision Trees",
+    "item_type": "mcq",
+    "difficulty": 0.65,
+    "content": {
+      "question": "Gini impurity of a node is 0. What does this mean?",
+      "options": [
+        "All samples in the node belong to the same class — perfect purity",
+        "The node has equal class distribution — maximum impurity",
+        "The feature importance at this node is zero",
+        "The split was made on a continuous feature"
+      ],
+      "correct_answer": 0,
+      "explanation": "Gini = 0 means all samples in the node belong to a single class. The node is 'pure' and no further splitting improves classification for those samples. This is the stopping criterion for a leaf node."
+    }
+  },
+  {
+    "id": "fe-001",
+    "skill_name": "Feature Engineering",
+    "item_type": "mcq",
+    "difficulty": 0.60,
+    "content": {
+      "question": "You have a categorical column 'color' with values ['red', 'blue', 'green']. Why should you avoid encoding this as [1, 2, 3] for a linear model?",
+      "options": [
+        "It implies a false ordinal relationship — the model thinks green(3) > blue(2) > red(1)",
+        "Categorical columns cannot be used in linear models at all",
+        "The numbers would need to be normalized first",
+        "Linear models can only handle binary features"
+      ],
+      "correct_answer": 0,
+      "explanation": "Label encoding [1,2,3] implies an ordering and magnitude relationship that doesn't exist for nominal categories. A linear model would treat 'green' as 3x 'red'. One-hot encoding creates independent binary features, correctly representing no inherent order."
+    }
+  },
+  {
+    "id": "fe-002",
+    "skill_name": "Feature Engineering",
+    "item_type": "mcq",
+    "difficulty": 0.65,
+    "content": {
+      "question": "What is data leakage in the context of feature engineering?",
+      "options": [
+        "Using future information or test set statistics when creating features for training",
+        "Having correlated features in the dataset",
+        "Normalizing features before splitting train/test",
+        "Having more features than samples"
+      ],
+      "correct_answer": 0,
+      "explanation": "Leakage occurs when training features incorporate information from the test set or future time periods, making models unrealistically accurate. Example: fitting a StandardScaler on all data before splitting — test set statistics influence the training transformation."
+    }
+  },
+  {
+    "id": "stat-dist-001",
+    "skill_name": "Statistical Distributions",
+    "item_type": "mcq",
+    "difficulty": 0.55,
+    "content": {
+      "question": "Heights of adults are approximately normally distributed. About what percentage falls within one standard deviation of the mean?",
+      "options": [
+        "68% — the 68-95-99.7 rule",
+        "50% — half above, half below",
+        "95% — the most common interval",
+        "100% — all values are within some standard deviation"
+      ],
+      "correct_answer": 0,
+      "explanation": "The 68-95-99.7 rule: ~68% of data falls within ±1σ, ~95% within ±2σ, ~99.7% within ±3σ. This is fundamental to understanding normal distributions and z-scores."
+    }
+  },
+  {
+    "id": "me-001",
+    "skill_name": "Model Evaluation Metrics",
+    "item_type": "mcq",
+    "difficulty": 0.55,
+    "content": {
+      "question": "A fraud detection model achieves 99% accuracy but the fraud team says it's useless. Why might this be?",
+      "options": [
+        "The dataset is 99% non-fraud — a model predicting 'not fraud' always achieves 99% accuracy without detecting anything",
+        "Accuracy is not a valid metric for fraud detection",
+        "The model needs at least 99.9% accuracy to be useful",
+        "Fraud models should use MSE, not accuracy"
+      ],
+      "correct_answer": 0,
+      "explanation": "Class imbalance makes accuracy misleading. If 1% of transactions are fraud, always predicting 'not fraud' hits 99% accuracy while catching zero fraud cases. Precision, recall, and F1 on the minority class are the meaningful metrics here."
+    }
+  }
+]
