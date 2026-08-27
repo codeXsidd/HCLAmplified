@@ -62,38 +62,70 @@ export default function DiagnosticFlow({ items, learnerId, onSubmit, onComplete,
   }, [currentIdx])
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="glass rounded-2xl p-6 w-full max-w-lg shadow-2xl" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-2xl border border-slate-200" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
           <div>
-            <div className="text-xs text-white/40 uppercase tracking-widest mb-1">Diagnostic</div>
-            <div className="font-semibold text-white">{current.skill_name}</div>
+            <div className="text-xs text-slate-400 uppercase tracking-widest mb-1">Diagnostic</div>
+            <div className="font-semibold text-slate-800">{current.skill_name}</div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="text-xs text-white/40">{currentIdx + 1} / {total}</div>
-            <button onClick={onClose} className="text-white/30 hover:text-white/60 text-xl leading-none">×</button>
+            <div className="text-xs text-slate-400">{currentIdx + 1} / {total}</div>
+            <button
+              onClick={onClose}
+              className="text-slate-300 hover:text-slate-600 text-xl leading-none transition-colors"
+              aria-label="Close"
+            >
+              ×
+            </button>
           </div>
         </div>
 
         {/* Progress bar */}
-        <div className="h-1 bg-white/10 rounded-full mb-6">
-          <div className="h-full bg-green-500 rounded-full transition-all" style={{ width: `${((currentIdx) / total) * 100}%` }} />
+        <div className="h-1.5 bg-slate-100 rounded-full mb-6">
+          <div
+            className="h-full bg-green-500 rounded-full transition-all"
+            style={{ width: `${((currentIdx) / total) * 100}%` }}
+          />
         </div>
 
         {/* Step: Confidence */}
         {step === "confidence" && (
           <div className="animate-fadeIn">
-            <p className="text-sm text-white/60 mb-1">Before answering — how confident are you in <span className="text-white font-medium">{current.skill_name}</span>?</p>
+            <p className="text-sm text-slate-500 mb-1">
+              Before answering — how confident are you in{" "}
+              <span className="text-slate-800 font-medium">{current.skill_name}</span>?
+            </p>
             <div className="text-center my-6">
-              <span className={`text-5xl font-bold tabular-nums ${confidence >= 80 ? "text-green-400" : confidence >= 50 ? "text-amber-400" : "text-white/40"}`}>{confidence}%</span>
+              <span
+                className={`text-5xl font-bold tabular-nums ${
+                  confidence >= 80
+                    ? "text-green-600"
+                    : confidence >= 50
+                    ? "text-amber-500"
+                    : "text-slate-400"
+                }`}
+              >
+                {confidence}%
+              </span>
             </div>
-            <input type="range" min={0} max={100} value={confidence} onChange={(e) => setConfidence(Number(e.target.value))} className="w-full accent-green-500 mb-6" />
-            <div className="flex justify-between text-xs text-white/30 mb-8">
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={confidence}
+              onChange={(e) => setConfidence(Number(e.target.value))}
+              className="w-full accent-indigo-600 mb-6"
+            />
+            <div className="flex justify-between text-xs text-slate-400 mb-8">
               <span>Not confident at all</span>
               <span>Completely confident</span>
             </div>
-            <button onClick={() => { setStep("question"); startTime.current = Date.now() }} className="w-full py-3 bg-green-500 hover:bg-green-400 text-white font-semibold rounded-xl transition-all">
+            <button
+              onClick={() => { setStep("question"); startTime.current = Date.now() }}
+              className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold rounded-xl transition-colors shadow-sm"
+            >
               Show Question →
             </button>
           </div>
@@ -103,23 +135,23 @@ export default function DiagnosticFlow({ items, learnerId, onSubmit, onComplete,
         {step === "question" && (
           <div className="animate-fadeIn">
             <div className="flex items-center gap-2 mb-4">
-              <span className="px-2 py-0.5 bg-white/5 text-white/40 text-xs rounded">
+              <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-xs rounded-md border border-slate-200">
                 Difficulty: {Math.round(current.difficulty * 100)}%
               </span>
-              <span className="px-2 py-0.5 bg-white/5 text-white/40 text-xs rounded">
+              <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-xs rounded-md border border-slate-200">
                 Your confidence: {confidence}%
               </span>
             </div>
-            <p className="text-white font-medium mb-5 leading-relaxed">{current.content.question}</p>
+            <p className="text-slate-800 font-medium mb-5 leading-relaxed">{current.content.question}</p>
             <div className="space-y-2">
               {current.content.options.map((opt, i) => (
                 <button
                   key={i}
                   onClick={() => handleAnswer(i)}
                   disabled={loading}
-                  className="w-full text-left px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-sm text-white/80 transition-all disabled:opacity-50"
+                  className="w-full text-left px-4 py-3 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 text-sm text-slate-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <span className="text-white/40 mr-2">{String.fromCharCode(65 + i)}.</span>
+                  <span className="text-slate-400 mr-2 font-medium">{String.fromCharCode(65 + i)}.</span>
                   {opt}
                 </button>
               ))}
@@ -130,43 +162,61 @@ export default function DiagnosticFlow({ items, learnerId, onSubmit, onComplete,
         {/* Step: Result */}
         {step === "result" && result && (
           <div className="animate-fadeIn">
-            <div className={`flex items-center gap-3 p-4 rounded-xl mb-4 ${result.correct ? "bg-green-500/10 border border-green-500/20" : "bg-red-500/10 border border-red-500/20"}`}>
-              <span className="text-2xl">{result.correct ? "✓" : "✗"}</span>
+            <div
+              className={`flex items-center gap-3 p-4 rounded-xl mb-4 ${
+                result.correct
+                  ? "bg-green-50 border border-green-200"
+                  : "bg-red-50 border border-red-200"
+              }`}
+            >
+              <span className={`text-2xl font-bold ${result.correct ? "text-green-600" : "text-red-500"}`}>
+                {result.correct ? "✓" : "✗"}
+              </span>
               <div>
-                <div className={`font-semibold ${result.correct ? "text-green-400" : "text-red-400"}`}>
+                <div className={`font-semibold ${result.correct ? "text-green-700" : "text-red-600"}`}>
                   {result.correct ? "Correct!" : "Incorrect"}
                 </div>
                 {!result.correct && (
-                  <div className="text-xs text-white/50 mt-0.5">
+                  <div className="text-xs text-slate-500 mt-0.5">
                     Correct: {current.content.options[current.content.correct_answer]}
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Calibration insight */}
+            {/* Calibration warning */}
             {!result.correct && confidence >= 70 && (
-              <div className="mb-4 px-3 py-2 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-400 text-xs">
-                ⚠ You rated {confidence}% confidence but answered incorrectly. This is logged as an overconfidence signal.
+              <div className="mb-4 px-3 py-2 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 text-xs">
+                <span className="font-semibold">Calibration notice:</span> You rated {confidence}% confidence but answered incorrectly. This is logged as an overconfidence signal.
               </div>
             )}
 
-            <p className="text-xs text-white/50 mb-5 leading-relaxed">{result.explanation || current.content.explanation}</p>
+            <p className="text-xs text-slate-500 mb-5 leading-relaxed">
+              {result.explanation || current.content.explanation}
+            </p>
 
             {/* Updated mastery preview */}
             {result.updated_state?.mastery_estimate != null && (
-              <div className="mb-5 p-3 bg-white/5 rounded-xl">
-                <div className="text-xs text-white/40 mb-1">Knowledge state updated</div>
+              <div className="mb-5 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <div className="text-xs text-slate-400 mb-1">Knowledge state updated</div>
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
-                    <div className="h-full bg-green-500 rounded-full transition-all" style={{ width: `${Math.round(result.updated_state.mastery_estimate * 100)}%` }} />
+                  <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-green-500 rounded-full transition-all"
+                      style={{ width: `${Math.round(result.updated_state.mastery_estimate * 100)}%` }}
+                    />
                   </div>
-                  <span className="text-xs text-white/60 tabular-nums">{Math.round(result.updated_state.mastery_estimate * 100)}%</span>
+                  <span className="text-xs text-slate-600 tabular-nums font-medium">
+                    {Math.round(result.updated_state.mastery_estimate * 100)}%
+                  </span>
                 </div>
               </div>
             )}
 
-            <button onClick={handleNext} className="w-full py-3 bg-white/10 hover:bg-white/15 text-white font-semibold rounded-xl transition-all">
+            <button
+              onClick={handleNext}
+              className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold rounded-xl transition-colors shadow-sm"
+            >
               {currentIdx + 1 >= total ? "See Results →" : "Next Question →"}
             </button>
           </div>

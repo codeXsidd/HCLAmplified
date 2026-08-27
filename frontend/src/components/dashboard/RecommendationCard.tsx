@@ -1,4 +1,5 @@
 import type { Recommendation } from "@/lib/api"
+import Link from "next/link"
 
 interface Props {
   recommendation: Recommendation
@@ -7,25 +8,23 @@ interface Props {
 }
 
 const URGENCY = {
-  critical: { color: "#ef4444", bg: "border-l-red-500", badge: "bg-red-500/20 text-red-400 border-red-500/30" },
-  high: { color: "#f97316", bg: "border-l-orange-500", badge: "bg-orange-500/20 text-orange-400 border-orange-500/30" },
-  medium: { color: "#eab308", bg: "border-l-yellow-500", badge: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" },
-  low: { color: "#22c55e", bg: "border-l-green-500", badge: "bg-green-500/20 text-green-400 border-green-500/30" },
+  critical: { border: "border-l-red-500", badge: "bg-red-50 text-red-700 border-red-200" },
+  high: { border: "border-l-amber-400", badge: "bg-amber-50 text-amber-700 border-amber-200" },
+  medium: { border: "border-l-indigo-400", badge: "bg-indigo-50 text-indigo-700 border-indigo-200" },
+  low: { border: "border-l-slate-400", badge: "bg-slate-100 text-slate-600 border-slate-200" },
 }
 
 function FactorBar({ label, value }: { label: string; value: number }) {
+  const pct = Math.min(100, Math.round(value * 100))
+  const barColor =
+    pct >= 70 ? "bg-indigo-300" : pct >= 40 ? "bg-slate-400" : "bg-slate-200"
   return (
     <div className="flex items-center gap-2">
-      <span className="text-xs text-white/40 w-14 shrink-0">{label}</span>
-      <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
-        <div
-          className="h-full bg-white/40 rounded-full"
-          style={{ width: `${Math.min(100, Math.round(value * 100))}%` }}
-        />
+      <span className="text-xs text-slate-500 w-14 shrink-0">{label}</span>
+      <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+        <div className={`h-full ${barColor} rounded-full`} style={{ width: `${pct}%` }} />
       </div>
-      <span className="text-xs text-white/30 tabular-nums w-8 text-right">
-        {Math.round(value * 100)}%
-      </span>
+      <span className="text-xs text-slate-500 tabular-nums w-8 text-right">{pct}%</span>
     </div>
   )
 }
@@ -35,57 +34,54 @@ export default function RecommendationCard({ recommendation: r, rank, onLearn }:
 
   return (
     <div
-      className={`glass rounded-xl p-4 border-l-4 ${urgency.bg} transition-all hover:bg-white/8`}
+      className={`bg-white rounded-xl p-4 border border-slate-200 border-l-4 ${urgency.border} transition-all hover:shadow-sm hover:border-slate-300`}
     >
-      {/* Header */}
-      <div className="flex items-start justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-white/30 tabular-nums">#{rank}</span>
-          <h4 className="font-semibold text-white text-sm">{r.skill_name}</h4>
+      <div className="flex items-center justify-between gap-2 mb-1">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-xs font-bold text-slate-400 tabular-nums shrink-0">#{rank}</span>
+          <h4 className="font-semibold text-slate-700 text-sm truncate">{r.skill_name}</h4>
         </div>
-        <span
-          className={`shrink-0 px-2 py-0.5 text-xs rounded-full border ${urgency.badge}`}
-        >
-          {r.primary_reason}
+        <span className={`shrink-0 px-2 py-0.5 text-xs rounded-full border font-medium capitalize ${urgency.badge}`}>
+          {r.urgency_level}
         </span>
       </div>
 
-      {/* Explanation */}
-      <p className="text-xs text-white/50 mb-3 leading-relaxed">{r.explanation}</p>
+      <p className="text-xs text-slate-500 mb-1 font-medium truncate">{r.primary_reason}</p>
+      <p className="text-xs text-slate-400 mb-3 leading-relaxed line-clamp-2">{r.explanation}</p>
 
-      {/* Transfer sources */}
       {r.transfer_sources.length > 0 && (
         <div className="mb-3 space-y-1">
           {r.transfer_sources.slice(0, 2).map((ts) => (
-            <div
-              key={ts.source_skill}
-              className="flex items-center gap-2 text-xs text-blue-400/70"
-            >
-              <span className="text-blue-500">⚡</span>
+            <div key={ts.source_skill} className="flex items-center gap-1.5 text-xs text-indigo-600">
+              <span className="text-indigo-400">+</span>
               via {ts.source_skill}: {ts.time_savings_percent}% faster
             </div>
           ))}
         </div>
       )}
 
-      {/* Factor bars */}
-      <div className="space-y-1 mb-3">
+      <div className="space-y-1.5 mb-3">
         <FactorBar label="Readiness" value={r.factors.readiness ?? 0} />
         <FactorBar label="Urgency" value={r.factors.urgency ?? 0} />
         <FactorBar label="Impact" value={r.factors.impact ?? 0} />
       </div>
 
-      {/* Footer */}
       <div className="flex items-center justify-between">
-        <span className="text-xs text-white/30">
-          ⏱ ~{r.estimated_time_hours}h estimated
-        </span>
-        <button
-          onClick={onLearn}
-          className="px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 rounded-lg text-xs text-blue-400 hover:text-blue-300 transition-all"
-        >
-          Why? →
-        </button>
+        <span className="text-xs text-slate-400">~{r.estimated_time_hours}h estimated</span>
+        <div className="flex gap-2">
+          <Link
+            href={`/learn?skill=${encodeURIComponent(r.skill_name)}`}
+            className="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg text-xs text-indigo-700 font-medium transition-all"
+          >
+            Practice
+          </Link>
+          <button
+            onClick={onLearn}
+            className="px-2.5 py-1.5 bg-white hover:bg-indigo-50 border border-indigo-200 rounded-lg text-xs text-indigo-600 font-medium transition-all"
+          >
+            Why?
+          </button>
+        </div>
       </div>
     </div>
   )

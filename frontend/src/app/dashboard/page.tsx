@@ -15,6 +15,7 @@ import {
   type SubmitResponseResult,
   type AssessmentItem,
 } from "@/lib/api"
+import AppNav from "@/components/shared/AppNav"
 import StatsRow from "@/components/dashboard/StatsRow"
 import RecommendationCard from "@/components/dashboard/RecommendationCard"
 import DecayTimeline from "@/components/dashboard/DecayTimeline"
@@ -41,14 +42,13 @@ function DashboardInner() {
   const [toast, setToast] = useState<{ skillName: string; prevMastery: number; newMastery: number; stateLabel: string } | null>(null)
   const [selectedRecommendation, setSelectedRecommendation] = useState<any>(null)
   const [knowledgeSkills, setKnowledgeSkills] = useState<Record<string, any>>({})
+  const [graphDims, setGraphDims] = useState({ width: 700, height: 520 })
 
   const loadData = useCallback(async () => {
     setLoading(true)
     setError("")
     try {
-      if (isDemo) {
-        await api.loadDemo()
-      }
+      if (isDemo) await api.loadDemo()
       const [graph, ins, recs, state] = await Promise.all([
         api.getKnowledgeGraph(DEMO_LEARNER_ID),
         api.getInsights(DEMO_LEARNER_ID),
@@ -67,9 +67,21 @@ function DashboardInner() {
     }
   }, [isDemo])
 
+  useEffect(() => { loadData() }, [loadData])
+
   useEffect(() => {
-    loadData()
-  }, [loadData])
+    const update = () => {
+      const mobile = window.innerWidth < 768
+      setGraphDims(
+        mobile
+          ? { width: window.innerWidth - 24, height: 300 }
+          : { width: Math.min(960, window.innerWidth * 0.62), height: window.innerHeight - 145 }
+      )
+    }
+    update()
+    window.addEventListener("resize", update)
+    return () => window.removeEventListener("resize", update)
+  }, [])
 
   const handleDiagnosticRun = async () => {
     try {
@@ -120,133 +132,155 @@ function DashboardInner() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0f1e] text-white">
-      {/* Top bar */}
-      <div className="border-b border-white/5 px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="text-lg font-bold bg-gradient-to-r from-white to-white/50 bg-clip-text text-transparent">
-            ⚡ SkillPulse
-          </Link>
-          {isDemo && (
-            <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/20 text-green-400 text-xs rounded-full">
-              Demo: Priya — ML Engineer Goal
-            </span>
-          )}
-        </div>
-        <div className="flex gap-3">
-          <button
-            onClick={handleDiagnosticRun}
-            className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/15 border border-amber-500/20 text-amber-400 text-xs rounded-lg transition-all"
-          >
-            Run Diagnostic
-          </button>
-          <button
-            onClick={loadData}
-            className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-white/50 text-xs rounded-lg transition-all"
-          >
-            Refresh
-          </button>
-          <button
-            onClick={async () => { await api.resetDemo(); await loadData() }}
-            className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-white/50 text-xs rounded-lg transition-all"
-          >
-            Reset Demo
-          </button>
-          <Link
-            href="/insights"
-            className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-white/50 text-xs rounded-lg transition-all"
-          >
-            Full Insights →
-          </Link>
-        </div>
-      </div>
+    <div className="min-h-screen bg-slate-50 text-slate-900">
+      <AppNav />
 
       {error && (
-        <div className="mx-6 mt-4 px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
-          {error}
-          <span className="ml-2 text-red-300/60 text-xs">
-            (Start backend: cd backend && uvicorn app.main:app --reload)
+        <div className="mx-6 mt-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm flex items-center justify-between">
+          <span>{error}</span>
+          <span className="text-red-400 text-xs ml-2">
+            Start backend: cd backend && uvicorn app.main:app --reload
           </span>
         </div>
       )}
 
-      <div className="flex h-[calc(100vh-57px)]">
+      <div className="flex flex-col md:flex-row md:h-[calc(100vh-57px)]">
         {/* Left: Knowledge Graph */}
-        <div className="flex-1 p-4 min-w-0">
-          <div className="flex items-center justify-between mb-2">
+        <div className="flex-1 p-3 md:p-4 min-w-0 flex flex-col">
+          <div className="flex items-start justify-between gap-2 mb-3">
             <div>
-              <h2 className="font-semibold text-white">Living Knowledge State</h2>
-              <p className="text-xs text-white/40">Click any node to inspect. Red pulse = decaying, amber = overconfident.</p>
+              <h2 className="font-semibold text-slate-800 text-sm md:text-base">Living Knowledge State</h2>
+              <p className="text-xs text-slate-400 hidden sm:block">Click any node to inspect.</p>
             </div>
-            <div className="flex gap-3 text-xs text-white/40">
-              <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-green-500" /> Solid
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-red-500" /> Decaying
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-amber-500" /> Overconfident
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="w-2 h-2 border-2 border-dashed border-blue-400 rounded-full" /> Transfer
-              </span>
+            <div className="flex items-center gap-3 text-xs text-slate-500 flex-wrap justify-end">
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500" /> Solid</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500" /> Decay</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500" /> Overconf.</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 border-2 border-dashed border-blue-400 rounded-full" /> Transfer</span>
             </div>
           </div>
 
-          {loading ? (
-            <div className="flex items-center justify-center h-[calc(100%-40px)] glass rounded-2xl">
-              <div className="text-center text-white/30">
-                <div className="text-4xl mb-2 animate-pulse">🧠</div>
-                <div className="text-sm">Building your knowledge model…</div>
+          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden" style={{ height: graphDims.height }}>
+            {loading ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center text-slate-400">
+                  <div className="text-3xl mb-2 animate-pulse text-indigo-300">◎</div>
+                  <div className="text-sm">Building your knowledge model...</div>
+                </div>
               </div>
-            </div>
-          ) : (
-            <KnowledgeGraph
-              nodes={nodes}
-              links={links}
-              onNodeClick={setSelectedNode}
-              width={Math.min(900, typeof window !== "undefined" ? window.innerWidth * 0.58 : 700)}
-              height={typeof window !== "undefined" ? window.innerHeight - 120 : 560}
-            />
-          )}
+            ) : (
+              <KnowledgeGraph
+                nodes={nodes}
+                links={links}
+                onNodeClick={setSelectedNode}
+                width={graphDims.width}
+                height={graphDims.height}
+              />
+            )}
+          </div>
         </div>
 
         {/* Right panel */}
-        <div className="w-80 flex-shrink-0 border-l border-white/5 p-4 overflow-y-auto space-y-4">
+        <div className="w-full md:w-80 md:flex-shrink-0 border-t md:border-t-0 md:border-l border-slate-200 bg-white p-4 md:overflow-y-auto space-y-5">
+          {/* What to do next — hero recommendation */}
+          <div>
+            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-2">What to do next</h3>
+            {loading ? (
+              <div className="h-28 rounded-xl bg-slate-100 animate-pulse" />
+            ) : recommendations?.recommendations[0] ? (() => {
+              const top = recommendations.recommendations[0]
+              return (
+                <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-4">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div>
+                      <div className="font-semibold text-indigo-900 text-sm">{top.skill_name || top.skill_id}</div>
+                      <div className="text-xs text-indigo-600 mt-0.5">{top.primary_reason}</div>
+                    </div>
+                    <span className={`px-2 py-0.5 text-xs rounded-md font-medium border flex-shrink-0 ${
+                      top.urgency_level === "critical"
+                        ? "bg-red-50 border-red-200 text-red-700"
+                        : top.urgency_level === "high"
+                        ? "bg-amber-50 border-amber-200 text-amber-700"
+                        : "bg-indigo-100 border-indigo-200 text-indigo-700"
+                    }`}>
+                      {top.urgency_level}
+                    </span>
+                  </div>
+                  <div className="flex gap-2">
+                    <Link
+                      href={`/learn?skill=${encodeURIComponent(top.skill_name || top.skill_id)}`}
+                      className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg text-center transition-colors"
+                    >
+                      Practice Now
+                    </Link>
+                    <button
+                      onClick={() => setSelectedRecommendation(top)}
+                      className="px-3 py-2 bg-white border border-indigo-200 text-indigo-600 text-xs font-medium rounded-lg hover:bg-indigo-50 transition-colors"
+                    >
+                      Why?
+                    </button>
+                  </div>
+                </div>
+              )
+            })() : (
+              <div className="text-xs text-slate-400 py-4 text-center bg-slate-50 rounded-xl border border-slate-100">
+                No recommendations yet
+              </div>
+            )}
+          </div>
+
+          {/* Controls */}
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={handleDiagnosticRun}
+              className="flex-1 px-3 py-2 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-700 text-xs font-medium rounded-lg transition-colors"
+            >
+              Run Diagnostic
+            </button>
+            <button
+              onClick={loadData}
+              className="px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 text-xs rounded-lg transition-colors"
+            >
+              Refresh
+            </button>
+            <button
+              onClick={async () => { await api.resetDemo(); await loadData() }}
+              className="px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 text-xs rounded-lg transition-colors"
+            >
+              Reset
+            </button>
+          </div>
+
           {/* Stats */}
           <div>
-            <h3 className="text-xs text-white/40 uppercase tracking-widest mb-3">Knowledge Summary</h3>
+            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">Knowledge Summary</h3>
             <StatsRow insights={insights} loading={loading} />
           </div>
 
-          {/* Recommendations */}
-          <div>
-            <h3 className="text-xs text-white/40 uppercase tracking-widest mb-3">Next Actions</h3>
-            {loading ? (
+          {/* More recommendations */}
+          {recommendations?.recommendations && recommendations.recommendations.length > 1 && (
+            <div>
+              <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">Also Recommended</h3>
               <div className="space-y-3">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-28 rounded-xl bg-white/5 animate-pulse" />
+                {recommendations.recommendations.slice(1, 4).map((r, i) => (
+                  <RecommendationCard
+                    key={r.skill_id}
+                    recommendation={r}
+                    rank={i + 2}
+                    onLearn={() => setSelectedRecommendation(r)}
+                  />
                 ))}
               </div>
-            ) : recommendations?.recommendations.length ? (
-              <div className="space-y-3">
-                {recommendations.recommendations.slice(0, 4).map((r, i) => (
-                  <RecommendationCard key={r.skill_id} recommendation={r} rank={i + 1} onLearn={() => setSelectedRecommendation(r)} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-xs text-white/30 py-4 text-center">No recommendations yet</div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Critical decay alerts */}
           {insights?.critical_decays?.length ? (
             <div>
-              <h3 className="text-xs text-white/40 uppercase tracking-widest mb-3">⚠ Decay Alerts</h3>
+              <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">Decay Alerts</h3>
               <div className="space-y-2">
                 {insights.critical_decays.map((s) => (
-                  <div key={s} className="px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-xl text-xs text-red-400">
+                  <div key={s} className="px-3 py-2 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 font-medium">
                     {s}
                   </div>
                 ))}
@@ -256,36 +290,50 @@ function DashboardInner() {
 
           {/* Decay radar */}
           <div>
-            <h3 className="text-xs text-white/40 uppercase tracking-widest mb-3">📡 Decay Radar</h3>
+            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">Decay Radar</h3>
             <DecayTimeline insights={insights} skills={knowledgeSkills} />
           </div>
 
           {/* Transfer opportunities */}
           {insights?.transfer_opportunities?.length ? (
             <div>
-              <h3 className="text-xs text-white/40 uppercase tracking-widest mb-3">⚡ Transfer Ready</h3>
+              <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">Transfer Ready</h3>
               <div className="space-y-2">
                 {insights.transfer_opportunities.slice(0, 3).map((t) => (
-                  <div key={t.skill} className="px-3 py-2 bg-blue-500/10 border border-blue-500/20 rounded-xl">
-                    <div className="text-xs font-medium text-blue-300">{t.skill}</div>
-                    <div className="text-xs text-blue-400/70 mt-0.5">
+                  <div key={t.skill} className="px-3 py-2 bg-blue-50 border border-blue-200 rounded-xl">
+                    <div className="text-xs font-semibold text-blue-700">{t.skill}</div>
+                    <div className="text-xs text-blue-600 mt-0.5">
                       {t.effective_transfer_percent}% already known via transfer
                     </div>
-                    <div className="text-xs text-white/30">via: {t.sources.join(", ")}</div>
+                    <div className="text-xs text-slate-400 mt-0.5">via: {t.sources.join(", ")}</div>
                   </div>
                 ))}
               </div>
             </div>
           ) : null}
+
+          {/* Bottom links */}
+          <div className="flex gap-2">
+            <Link
+              href="/path"
+              className="flex-1 py-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-medium rounded-xl text-center transition-colors"
+            >
+              View Path →
+            </Link>
+            <Link
+              href="/insights"
+              className="flex-1 py-2.5 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 text-xs font-medium rounded-xl text-center transition-colors"
+            >
+              Analytics →
+            </Link>
+          </div>
         </div>
       </div>
 
-      {/* Node popup */}
       {selectedNode && (
         <SkillStatePopup node={selectedNode} onClose={() => setSelectedNode(null)} />
       )}
 
-      {/* Diagnostic modal */}
       {showDiagnostic && diagnosticItems.length > 0 && (
         <DiagnosticFlow
           items={diagnosticItems}
@@ -296,7 +344,6 @@ function DashboardInner() {
         />
       )}
 
-      {/* Mastery update toast */}
       {toast && (
         <MasteryUpdateToast
           skillName={toast.skillName}
@@ -307,7 +354,6 @@ function DashboardInner() {
         />
       )}
 
-      {/* Recommendation explanation panel */}
       {selectedRecommendation && (
         <RecommendationExplanation
           recommendation={selectedRecommendation}
@@ -320,14 +366,16 @@ function DashboardInner() {
 
 export default function DashboardPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-[#0a0f1e] flex items-center justify-center">
-        <div className="text-white/30 text-center">
-          <div className="text-4xl mb-2 animate-pulse">⚡</div>
-          <div>Loading SkillPulse…</div>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+          <div className="text-slate-400 text-center">
+            <div className="text-3xl mb-2 animate-pulse text-indigo-300">◎</div>
+            <div className="text-sm">Loading SkillPulse...</div>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <DashboardInner />
     </Suspense>
   )

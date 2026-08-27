@@ -4,120 +4,94 @@ import Link from "next/link"
 
 const features = [
   {
-    icon: "🧠",
     title: "Living Knowledge State",
-    description:
-      "Bayesian probability model per skill — not binary completed/not, but a living estimate with confidence intervals that updates every time you interact.",
-    color: "border-green-500/30 bg-green-500/5",
-    glow: "group-hover:shadow-green-500/20",
+    description: "Bayesian probability model per skill — not binary completed/not, but a living estimate with confidence intervals that updates every time you interact.",
+    accent: "border-green-200 bg-green-50",
+    dot: "bg-green-500",
+    tag: "Bayesian Inference",
   },
   {
-    icon: "📡",
     title: "Skill Decay Detection",
-    description:
-      "Exponential forgetting curves reveal which skills you learned weeks ago are silently fading. Get maintenance refreshes before decay costs you in interviews.",
-    color: "border-red-500/30 bg-red-500/5",
-    glow: "group-hover:shadow-red-500/20",
+    description: "Exponential forgetting curves reveal which skills you learned weeks ago are silently fading. Get maintenance refreshes before decay costs you in interviews.",
+    accent: "border-red-200 bg-red-50",
+    dot: "bg-red-500",
+    tag: "Decay Modeling",
   },
   {
-    icon: "⚡",
     title: "Transfer Intelligence",
-    description:
-      "Your SQL knowledge = 45% of Pandas already learned. Detect existing skill transfer and collapse your learning time — stop starting from zero.",
-    color: "border-blue-500/30 bg-blue-500/5",
-    glow: "group-hover:shadow-blue-500/20",
+    description: "Your SQL knowledge = 45% of Pandas already learned. Detect existing skill transfer and collapse your learning time — stop starting from zero.",
+    accent: "border-blue-200 bg-blue-50",
+    dot: "bg-blue-500",
+    tag: "Graph Algorithms",
   },
   {
-    icon: "🎯",
     title: "Confidence Calibration",
-    description:
-      "Catch Dunning-Kruger gaps before they hurt you. We ask your confidence before each question, then reveal where you think you know something but don't.",
-    color: "border-amber-500/30 bg-amber-500/5",
-    glow: "group-hover:shadow-amber-500/20",
+    description: "Catch Dunning-Kruger gaps before they hurt you. We ask your confidence before each question, then reveal where you think you know something but don't.",
+    accent: "border-amber-200 bg-amber-50",
+    dot: "bg-amber-500",
+    tag: "Metacognition",
   },
 ]
 
 const nodeShowcase = [
   { color: "#22c55e", label: "Solid Mastery", desc: "Well-known, fresh" },
   { color: "#ef4444", label: "Decaying", desc: "Fading from disuse" },
-  { color: "#f59e0b", label: "Overconfident", desc: "You think you know it" },
+  { color: "#f59e0b", label: "Overconfident", desc: "Dunning-Kruger risk" },
   { color: "#3b82f6", label: "Transfer Ready", desc: "Existing skill helps" },
-  { color: "#6b7280", label: "Not Started", desc: "Path forward" },
+  { color: "#94a3b8", label: "Not Started", desc: "Path forward" },
 ]
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-[#0a0f1e] text-white overflow-hidden">
-      {/* Ambient background */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-green-500/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500/3 rounded-full blur-3xl" />
-      </div>
-
+    <div className="min-h-screen bg-white text-slate-900">
       {/* Nav */}
-      <nav className="relative z-10 flex items-center justify-between px-8 py-5 border-b border-white/5">
+      <nav className="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-slate-200 px-8 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-2xl">⚡</span>
-          <span className="text-xl font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
-            SkillPulse
-          </span>
+          <span className="text-xl font-bold text-indigo-600">SP</span>
+          <span className="text-xl font-bold text-slate-900">SkillPulse</span>
         </div>
-        <div className="flex gap-4">
-          <Link
-            href="/onboard"
-            className="px-4 py-2 text-sm text-white/60 hover:text-white transition-colors"
-          >
-            Onboard
+        <div className="flex items-center gap-3">
+          <Link href="/onboard" className="px-4 py-2 text-sm text-slate-600 hover:text-slate-900 font-medium transition-colors">
+            Get Started
           </Link>
-          <Link
-            href="/dashboard?demo=true"
-            className="px-4 py-2 text-sm bg-white/10 hover:bg-white/15 rounded-lg transition-colors"
-          >
+          <Link href="/dashboard?demo=true" className="px-4 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors">
             View Demo
           </Link>
         </div>
       </nav>
 
       {/* Hero */}
-      <section className="relative z-10 max-w-5xl mx-auto px-8 pt-24 pb-20 text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium mb-8">
-          <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-          HCLTech Amplified Hackathon
+      <section className="max-w-5xl mx-auto px-8 pt-20 pb-16 text-center">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold mb-8">
+          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+          HCLTech Amplified Hackathon 2026
         </div>
 
-        <h1 className="text-6xl font-bold leading-tight mb-6">
-          <span className="bg-gradient-to-r from-white via-white to-white/50 bg-clip-text text-transparent">
-            A living model of
-          </span>
+        <h1 className="text-5xl md:text-6xl font-bold leading-tight mb-6 text-slate-900">
+          A living model of
           <br />
-          <span className="bg-gradient-to-r from-green-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
-            what you know
-          </span>
+          <span className="text-indigo-600">what you know</span>
         </h1>
 
-        <p className="text-xl text-white/50 max-w-2xl mx-auto mb-4 leading-relaxed">
-          SkillPulse doesn&apos;t recommend courses. It maintains a{" "}
-          <span className="text-white/80">probabilistic model</span> of your knowledge — catching
-          what you&apos;re forgetting, revealing dangerous gaps, and showing how your existing skills
-          shortcut your path.
+        <p className="text-xl text-slate-500 max-w-2xl mx-auto mb-4 leading-relaxed">
+          SkillPulse maintains a <span className="text-slate-800 font-medium">probabilistic model</span> of your knowledge —
+          catching what you&apos;re forgetting, revealing dangerous gaps, and showing how your existing skills shortcut your path.
         </p>
 
-        <p className="text-sm text-white/30 mb-12 max-w-xl mx-auto">
-          Not a ChatGPT wrapper. Real Bayesian inference · Exponential decay modeling · Transfer
-          intelligence · Graph algorithms
+        <p className="text-sm text-slate-400 mb-12 max-w-xl mx-auto">
+          Not a ChatGPT wrapper. Real Bayesian inference · Exponential decay modeling · Transfer intelligence · Graph algorithms
         </p>
 
         <div className="flex items-center justify-center gap-4 flex-wrap">
           <Link
             href="/dashboard?demo=true"
-            className="px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-semibold rounded-xl transition-all shadow-lg shadow-green-500/25 hover:shadow-green-500/40 text-lg"
+            className="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-all shadow-sm shadow-indigo-200 text-lg"
           >
-            ▶ Start Demo — Meet Priya
+            Start Demo — Meet Priya
           </Link>
           <Link
             href="/onboard"
-            className="px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium rounded-xl transition-all text-lg"
+            className="px-8 py-4 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-medium rounded-xl transition-all text-lg"
           >
             Onboard Yourself
           </Link>
@@ -125,24 +99,21 @@ export default function LandingPage() {
       </section>
 
       {/* Node legend */}
-      <section className="relative z-10 max-w-3xl mx-auto px-8 mb-20">
-        <div className="glass rounded-2xl p-6">
-          <p className="text-xs text-white/40 uppercase tracking-widest mb-4 text-center">
+      <section className="max-w-3xl mx-auto px-8 mb-16">
+        <div className="card-elevated rounded-2xl p-6">
+          <p className="text-xs text-slate-400 uppercase tracking-widest mb-5 text-center font-semibold">
             Knowledge State Legend
           </p>
-          <div className="flex flex-wrap justify-center gap-4">
+          <div className="flex flex-wrap justify-center gap-6">
             {nodeShowcase.map((n) => (
-              <div key={n.label} className="flex items-center gap-2">
+              <div key={n.label} className="flex items-center gap-2.5">
                 <div
-                  className="w-4 h-4 rounded-full flex-shrink-0"
-                  style={{
-                    backgroundColor: n.color,
-                    boxShadow: `0 0 8px ${n.color}`,
-                  }}
+                  className="w-3.5 h-3.5 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: n.color }}
                 />
                 <div>
-                  <div className="text-xs font-medium text-white/80">{n.label}</div>
-                  <div className="text-xs text-white/40">{n.desc}</div>
+                  <div className="text-xs font-semibold text-slate-700">{n.label}</div>
+                  <div className="text-xs text-slate-400">{n.desc}</div>
                 </div>
               </div>
             ))}
@@ -151,34 +122,30 @@ export default function LandingPage() {
       </section>
 
       {/* Features */}
-      <section className="relative z-10 max-w-5xl mx-auto px-8 pb-24">
-        <h2 className="text-2xl font-semibold text-center text-white/70 mb-12">
-          What makes it different
-        </h2>
+      <section className="max-w-5xl mx-auto px-8 pb-20 bg-slate-50 rounded-3xl py-16 mb-16">
+        <h2 className="text-2xl font-bold text-center text-slate-800 mb-3">What makes it different</h2>
+        <p className="text-center text-slate-500 mb-12 text-sm">Four capabilities that traditional learning platforms don&apos;t have</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {features.map((f) => (
-            <div
-              key={f.title}
-              className={`group p-6 rounded-2xl border ${f.color} transition-all hover:shadow-xl ${f.glow}`}
-            >
-              <div className="text-3xl mb-3">{f.icon}</div>
-              <h3 className="font-semibold text-white mb-2">{f.title}</h3>
-              <p className="text-sm text-white/50 leading-relaxed">{f.description}</p>
+            <div key={f.title} className={`p-6 rounded-2xl border ${f.accent} transition-all hover:shadow-md`}>
+              <div className="flex items-center gap-2 mb-3">
+                <span className={`w-2 h-2 rounded-full ${f.dot}`} />
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{f.tag}</span>
+              </div>
+              <h3 className="font-bold text-slate-900 mb-2">{f.title}</h3>
+              <p className="text-sm text-slate-600 leading-relaxed">{f.description}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* Bottom CTA */}
-      <section className="relative z-10 text-center pb-20">
-        <p className="text-white/30 text-sm mb-4">
+      <section className="text-center pb-20 px-8">
+        <p className="text-slate-400 text-sm mb-4">
           Built for HCLTech Amplified · Bayesian inference + Graph intelligence + LLM reasoning
         </p>
-        <Link
-          href="/dashboard?demo=true"
-          className="text-green-400 hover:text-green-300 text-sm underline underline-offset-4"
-        >
-          Launch the live demo →
+        <Link href="/dashboard?demo=true" className="text-indigo-600 hover:text-indigo-800 text-sm font-medium underline underline-offset-4">
+          Launch the live demo
         </Link>
       </section>
     </div>

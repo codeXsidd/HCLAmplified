@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import learners, knowledge_state, assessment, recommendations, onboarding
+from app.routers import learners, knowledge_state, assessment, recommendations, onboarding, assistant
 from app.database import engine, Base, get_memory_store, SessionLocal
 from app.seeds_loader import load_priya_state
 
@@ -89,6 +89,7 @@ app.include_router(knowledge_state.router, prefix="/api/knowledge-state", tags=[
 app.include_router(assessment.router, prefix="/api/assessment", tags=["assessment"])
 app.include_router(recommendations.router, prefix="/api/recommendations", tags=["recommendations"])
 app.include_router(onboarding.router, prefix="/api/onboarding", tags=["onboarding"])
+app.include_router(assistant.router, prefix="/api/assistant", tags=["assistant"])
 
 
 @app.get("/")

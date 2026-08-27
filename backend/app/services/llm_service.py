@@ -17,7 +17,7 @@ def _load_cache():
     global _cache
     try:
         if os.path.exists(_CACHE_PATH):
-            with open(_CACHE_PATH, "r") as f:
+            with open(_CACHE_PATH, "r", encoding="utf-8") as f:
                 _cache = json.load(f)
     except Exception:
         _cache = {}
@@ -25,8 +25,8 @@ def _load_cache():
 
 def _save_cache():
     try:
-        with open(_CACHE_PATH, "w") as f:
-            json.dump(_cache, f, indent=2)
+        with open(_CACHE_PATH, "w", encoding="utf-8") as f:
+            json.dump(_cache, f, indent=2, ensure_ascii=False)
     except Exception as e:
         print(f"Cache save failed: {e}")
 

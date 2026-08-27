@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import NextTopLoader from "nextjs-toploader"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -8,8 +9,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark">
-      <body className="min-h-screen bg-[#0a0f1e] text-white antialiased">
+    <html lang="en">
+      <body className="min-h-screen bg-slate-50 text-slate-900 antialiased">
+        <NextTopLoader color="#6366f1" height={3} showSpinner={false} />
         {children}
       </body>
     </html>

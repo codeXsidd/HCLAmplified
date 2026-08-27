@@ -142,10 +142,10 @@ export default function KnowledgeGraph({ nodes, links, onNodeClick, width = 700,
   if (!nodes.length) {
     return (
       <div
-        className="flex items-center justify-center rounded-2xl border border-white/5 bg-white/2"
+        className="flex items-center justify-center rounded-2xl border border-slate-200 bg-slate-50"
         style={{ width, height }}
       >
-        <div className="text-center text-white/30">
+        <div className="text-center text-slate-400">
           <div className="text-4xl mb-3">🧠</div>
           <div className="text-sm">Knowledge graph loading…</div>
         </div>
