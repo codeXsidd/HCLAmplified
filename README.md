@@ -88,15 +88,6 @@ pnpm dev
 # App: http://localhost:3000
 ```
 
-### Seed Data
-
-The app comes pre-loaded with a demo learner (`priya-demo-001`) — an ML Engineer journey with 13 skills at various mastery/decay states. The demo state loads automatically on server startup.
-
-To reset the demo:
-```
-POST /api/onboarding/reset-demo?learner_id=priya-demo-001
-```
-
 ## API Reference
 
 Full API documentation is available at:
