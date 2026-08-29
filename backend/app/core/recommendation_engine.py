@@ -3,7 +3,8 @@ from app.core.decay_calculator import decay_calculator
 from app.core.transfer_analyzer import transfer_analyzer
 from app.core.skill_graph import skill_graph
 
-ML_GOAL_SKILLS = [
+# Legacy ML goal skills — used ONLY when no domain pack is assigned to the learner
+_ML_GOAL_SKILLS_FALLBACK = [
     "Linear Regression",
     "Logistic Regression",
     "Decision Trees",
@@ -22,6 +23,7 @@ ML_GOAL_SKILLS = [
 class RecommendationEngine:
     """
     Priority Score = 0.30*Readiness + 0.25*Urgency + 0.25*Impact + 0.15*Transfer - 0.20*Redundancy
+    Works for any domain — graph and goal_skills are passed in dynamically.
     """
 
     WEIGHTS = {
@@ -37,9 +39,12 @@ class RecommendationEngine:
         learner_states: Dict[str, Dict],
         goal_skills: Optional[List[str]] = None,
         top_k: int = 5,
+        graph=None,              # DomainGraph or None (falls back to static skill_graph)
+        transfer_map: Optional[Dict] = None,  # from DomainGraph.build_transfer_map()
     ) -> List[Dict]:
-        goal = goal_skills or ML_GOAL_SKILLS
-        all_skills = skill_graph.get_all_skills()
+        active_graph = graph if graph is not None else skill_graph
+        goal = goal_skills if goal_skills else _ML_GOAL_SKILLS_FALLBACK
+        all_skills = active_graph.get_all_skills()
 
         known_skills = set()
         for name, state in learner_states.items():
@@ -52,7 +57,7 @@ class RecommendationEngine:
                 known_skills.add(name)
 
         all_successor_counts = [
-            len(skill_graph.get_successors(s["name"])) for s in all_skills
+            len(active_graph.get_successors(s["name"])) for s in all_skills
         ]
         max_successors = max(all_successor_counts) if all_successor_counts else 1
 
@@ -71,7 +76,7 @@ class RecommendationEngine:
             )
 
             # 1. READINESS
-            prereqs = skill_graph.get_prerequisites(name)
+            prereqs = active_graph.get_prerequisites(name)
             if prereqs:
                 ready_count = 0
                 for p in prereqs:
@@ -94,12 +99,12 @@ class RecommendationEngine:
             d_urgency = decay_calculator.decay_urgency(
                 stored_mastery, last_practiced, half_life
             )
-            successors = skill_graph.get_successors(name)
+            successors = active_graph.get_successors(name)
             blocking = len(successors) / max_successors
             urgency = 0.6 * d_urgency + 0.4 * blocking
 
             # 3. IMPACT
-            reachable = skill_graph.get_reachable_skills(name)
+            reachable = active_graph.get_reachable_skills(name)
             goal_overlap = len(reachable & set(goal))
             impact = goal_overlap / len(goal) if goal else 0.0
             if name in goal:

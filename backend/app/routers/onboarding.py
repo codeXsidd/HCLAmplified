@@ -3,6 +3,7 @@ from app.models.schemas import OnboardingGoalRequest, SelfAssessmentRequest
 from app.database import get_memory_store, SessionLocal
 from app.core.skill_graph import skill_graph
 from app.seeds_loader import load_priya_state
+from app.services.domain_service import discover_domain, get_goal_competencies
 
 router = APIRouter()
 
@@ -18,6 +19,8 @@ def _persist_learner(learner: dict) -> None:
             db.add(row)
         row.name = learner.get("name", "Learner")
         row.goal = learner.get("goal")
+        row.background = learner.get("background")
+        row.domain_pack_id = learner.get("domain_pack_id")
         row.onboarding_complete = learner.get("onboarding_complete", False)
         db.commit()
         db.close()
@@ -42,6 +45,7 @@ def _persist_skill_state(state: dict) -> None:
         row.beta_param = state["beta_param"]
         row.mastery_estimate = state["mastery_estimate"]
         row.self_assessed_confidence = state.get("self_assessed_confidence")
+        row.evidence_source = state.get("evidence_source", "none")
         row.half_life_days = state["half_life_days"]
         lp = state.get("last_practiced_at")
         row.last_practiced_at = datetime.fromisoformat(lp) if lp else None
@@ -53,29 +57,51 @@ def _persist_skill_state(state: dict) -> None:
 
 
 @router.post("/goal")
-def set_goal(body: OnboardingGoalRequest):
+async def set_goal(body: OnboardingGoalRequest):
     store = get_memory_store()
-    if body.learner_id not in store["learners"]:
-        store["learners"][body.learner_id] = {
-            "id": body.learner_id,
-            "name": "Learner",
-            "goal": body.goal,
-            "onboarding_complete": False,
-        }
+
+    # Discover domain pack for this goal (LLM-generated, cached)
+    domain_result = await discover_domain(
+        body.goal,
+        getattr(body, "background", ""),
+        body.learner_id,
+    )
+    pack_id = domain_result.get("id") if "error" not in domain_result else None
+    pack_competencies = domain_result.get("pack_data", {}).get("competencies", []) if pack_id else []
+
+    learner = store["learners"].get(body.learner_id, {
+        "id": body.learner_id,
+        "name": "Learner",
+        "onboarding_complete": False,
+    })
+    learner["goal"] = body.goal
+    learner["background"] = getattr(body, "background", "")
+    learner["domain_pack_id"] = pack_id
+    store["learners"][body.learner_id] = learner
+
+    _persist_learner(learner)
+
+    # Return domain competencies for self-assessment if available; else fall back to static graph
+    if pack_competencies:
+        # Prioritise goal skills, then pick foundational ones, limit to 12
+        goal_skills = [c for c in pack_competencies if c.get("is_goal_skill")]
+        other_skills = [c for c in pack_competencies if not c.get("is_goal_skill")]
+        top = (goal_skills + other_skills)[:12]
+        assessment_skills = [
+            {"name": c["name"], "domain": domain_result.get("domain_name", "general")}
+            for c in top
+        ]
     else:
-        store["learners"][body.learner_id]["goal"] = body.goal
-
-    _persist_learner(store["learners"][body.learner_id])
-
-    skills = skill_graph.get_all_skills()
-    top_skills = [s for s in skills if s.get("difficulty_level", 0.5) <= 0.5][:12]
+        skills = skill_graph.get_all_skills()
+        top = [s for s in skills if s.get("difficulty_level", 0.5) <= 0.5][:12]
+        assessment_skills = [{"name": s["name"], "domain": s.get("domain", "general")} for s in top]
 
     return {
         "message": "Goal set",
         "learner_id": body.learner_id,
-        "self_assessment_skills": [
-            {"name": s["name"], "domain": s["domain"]} for s in top_skills
-        ],
+        "domain_pack_id": pack_id,
+        "domain_name": domain_result.get("domain_name"),
+        "self_assessment_skills": assessment_skills,
     }
 
 
@@ -97,6 +123,7 @@ def self_assess(body: SelfAssessmentRequest):
             "beta_param": beta_p,
             "mastery_estimate": alpha / (alpha + beta_p),
             "self_assessed_confidence": confidence,
+            "evidence_source": "self_report",
             "half_life_days": 30.0,
             "last_practiced_at": None,
             "practice_count": 0,

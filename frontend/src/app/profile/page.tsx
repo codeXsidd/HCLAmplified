@@ -1,23 +1,35 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import AppNav from "@/components/shared/AppNav"
-import { api, DEMO_LEARNER_ID } from "@/lib/api"
+import { api, getLearnerID } from "@/lib/api"
 
 export default function ProfilePage() {
+  const [learnerId, setLearnerId] = useState("")
+  const [goal, setGoal] = useState("")
   const [resetting, setResetting] = useState(false)
   const [resetDone, setResetDone] = useState(false)
 
+  useEffect(() => {
+    setLearnerId(getLearnerID())
+    setGoal(localStorage.getItem("skillpulse:goal") ?? "")
+  }, [])
+
   const handleReset = async () => {
-    if (!confirm("Reset demo to Priya's initial state? This cannot be undone.")) return
+    if (!confirm("Reset your learning data? This will clear your progress.")) return
     setResetting(true)
     try {
-      await api.resetDemo()
+      await api.resetDemo(learnerId)
+      localStorage.removeItem("skillpulse:goal")
+      localStorage.removeItem("skillpulse:learner_id")
+      setGoal("")
       setResetDone(true)
     } catch {}
     setResetting(false)
   }
+
+  const avatarChar = goal ? goal[0].toUpperCase() : "?"
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -28,16 +40,20 @@ export default function ProfilePage() {
         {/* Learner card */}
         <div className="card-elevated rounded-2xl p-6 mb-5">
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-14 h-14 rounded-full bg-indigo-100 flex items-center justify-center text-2xl font-bold text-indigo-700">P</div>
+            <div className="w-14 h-14 rounded-full bg-indigo-100 flex items-center justify-center text-2xl font-bold text-indigo-700">
+              {avatarChar}
+            </div>
             <div>
-              <h2 className="font-bold text-slate-900 text-lg">Priya</h2>
-              <p className="text-sm text-slate-500">Demo Learner — {DEMO_LEARNER_ID}</p>
+              <h2 className="font-bold text-slate-900 text-lg">Your Profile</h2>
+              <p className="text-sm text-slate-500 font-mono">{learnerId || "—"}</p>
             </div>
           </div>
           <div className="border-t border-slate-100 pt-4">
             <div className="flex items-center justify-between text-sm">
               <span className="text-slate-500">Current Goal</span>
-              <span className="font-medium text-slate-800">Become an ML Engineer</span>
+              <span className="font-medium text-slate-800 max-w-xs text-right">
+                {goal || <span className="text-slate-400 italic">No goal set</span>}
+              </span>
             </div>
           </div>
         </div>
@@ -47,7 +63,7 @@ export default function ProfilePage() {
           <h3 className="text-sm font-semibold text-slate-700 mb-4">Quick Navigation</h3>
           <div className="space-y-2">
             {[
-              { href: "/dashboard?demo=true", label: "Dashboard", desc: "Knowledge graph & recommendations" },
+              { href: "/dashboard", label: "Dashboard", desc: "Knowledge graph & recommendations" },
               { href: "/goals", label: "Goals", desc: "Update your learning goal" },
               { href: "/assistant", label: "AI Assistant", desc: "Contextual learning coach" },
               { href: "/insights", label: "Analytics", desc: "Calibration & decay analysis" },
@@ -65,14 +81,14 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Demo controls */}
-        <div className="card-elevated rounded-2xl p-6 border-red-100">
-          <h3 className="text-sm font-semibold text-slate-700 mb-2">Demo Controls</h3>
-          <p className="text-xs text-slate-500 mb-4">Reset the demo to Priya&apos;s initial state (13 skills, day 0 of ML Engineer journey).</p>
+        {/* Reset */}
+        <div className="card-elevated rounded-2xl p-6">
+          <h3 className="text-sm font-semibold text-slate-700 mb-2">Reset Progress</h3>
+          <p className="text-xs text-slate-500 mb-4">Clear all your learning data and start fresh with a new goal.</p>
 
           {resetDone && (
             <div className="mb-4 px-4 py-3 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">
-              Demo reset successfully.
+              Progress cleared. <Link href="/onboard" className="underline font-medium">Start over →</Link>
             </div>
           )}
 
@@ -81,7 +97,7 @@ export default function ProfilePage() {
             disabled={resetting}
             className="w-full py-3 bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 font-medium rounded-xl transition-all text-sm disabled:opacity-50"
           >
-            {resetting ? "Resetting..." : "Reset Demo State"}
+            {resetting ? "Clearing..." : "Clear My Progress"}
           </button>
         </div>
       </div>

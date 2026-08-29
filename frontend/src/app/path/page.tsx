@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { api, DEMO_LEARNER_ID, type Recommendation, type InsightsResponse } from "@/lib/api"
+import { api, getLearnerID, type Recommendation, type InsightsResponse } from "@/lib/api"
 import AppNav from "@/components/shared/AppNav"
 
 interface SkillStage {
@@ -25,10 +25,11 @@ export default function PathPage() {
   useEffect(() => {
     const load = async () => {
       try {
+        const learnerId = getLearnerID()
         const [state, recs, ins] = await Promise.all([
-          api.getKnowledgeState(DEMO_LEARNER_ID),
-          api.getRecommendations(DEMO_LEARNER_ID, 12),
-          api.getInsights(DEMO_LEARNER_ID),
+          api.getKnowledgeState(learnerId),
+          api.getRecommendations(learnerId, 12),
+          api.getInsights(learnerId),
         ])
         setInsights(ins)
 
@@ -69,7 +70,8 @@ export default function PathPage() {
         }))
 
         setStages([...mastered, ...inProgress, ...nextStages])
-        setGoal("Become an ML Engineer")
+        const savedGoal = typeof window !== "undefined" ? localStorage.getItem("skillpulse:goal") : ""
+        setGoal(savedGoal || "Your Learning Goal")
       } catch (e: any) {
         setError(e.message)
       } finally {
@@ -122,7 +124,7 @@ export default function PathPage() {
         <div className="mb-8">
           <div className="text-xs font-semibold text-indigo-600 uppercase tracking-widest mb-1">Learning Path</div>
           <h1 className="text-2xl font-bold text-slate-900 mb-1">
-            {goal || "Your Path to ML Engineer"}
+            {goal || "Your Learning Path"}
           </h1>
           <p className="text-sm text-slate-500">
             Personalized skill sequence based on your Bayesian knowledge model
@@ -284,7 +286,7 @@ export default function PathPage() {
                   <span className="text-indigo-600 text-lg">🎯</span>
                 </div>
                 <div className="flex-1 rounded-2xl border border-indigo-100 bg-indigo-50 p-4">
-                  <span className="font-semibold text-indigo-800 text-sm">Goal: {goal || "ML Engineer"}</span>
+                  <span className="font-semibold text-indigo-800 text-sm">Goal: {goal || "Your Learning Goal"}</span>
                   <p className="text-xs text-indigo-500 mt-0.5">Complete the path above to reach your goal</p>
                 </div>
               </div>

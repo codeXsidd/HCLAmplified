@@ -38,7 +38,7 @@ def _cache_key(prompt: str) -> str:
 _load_cache()
 
 
-async def llm_call(prompt: str, default: str = "") -> str:
+async def llm_call(prompt: str, default: str = "", max_tokens: int = 800) -> str:
     """Call Groq API with cache. Returns cached result or default on failure."""
     key = _cache_key(prompt)
     if key in _cache:
@@ -52,7 +52,7 @@ async def llm_call(prompt: str, default: str = "") -> str:
         client = Groq(api_key=settings.GROQ_API_KEY)
         msg = client.chat.completions.create(
             model="qwen/qwen3.8-27b",
-            max_tokens=800,
+            max_tokens=max_tokens,
             messages=[{"role": "user", "content": prompt}]
         )
         result = msg.choices[0].message.content
@@ -154,6 +154,47 @@ async def generate_assessment_question(
         return json.loads(text.strip())
     except Exception:
         return None
+
+
+async def generate_competency_questions(
+    competency_name: str,
+    competency_description: str = "",
+    domain_name: str = "",
+    n: int = 3,
+) -> list[dict]:
+    """
+    Generate n MCQ questions for a competency (any domain). Returns list of question dicts.
+    Results are cached so the same competency is only generated once.
+    """
+    prompt = (
+        f'Generate {n} multiple-choice questions that test UNDERSTANDING (not recall) '
+        f'of "{competency_name}" in the context of {domain_name or "the relevant domain"}.\n'
+        f'{f"Competency description: {competency_description}" if competency_description else ""}\n\n'
+        f"Questions should vary in difficulty (easy, medium, hard).\n"
+        f"Each question should reveal whether someone truly understands vs. just memorized.\n\n"
+        f"Return ONLY a JSON array, no markdown:\n"
+        f'[{{"question": "...", "options": ["A","B","C","D"], "correct_answer": 0, '
+        f'"difficulty": 0.3, "explanation": "Brief explanation."}}, ...]\n\n'
+        f"correct_answer is the 0-based index of the correct option. difficulty is 0.0-1.0."
+    )
+
+    result = await llm_call(prompt, "[]", max_tokens=1500)
+    if not result or result == "[]":
+        return []
+    try:
+        import re
+        text = result.strip()
+        if "```" in text:
+            match = re.search(r"```(?:json)?\s*([\s\S]+?)```", text)
+            if match:
+                text = match.group(1).strip()
+        match = re.search(r"\[[\s\S]+\]", text)
+        if match:
+            text = match.group(0)
+        questions = json.loads(text)
+        return questions if isinstance(questions, list) else []
+    except Exception:
+        return []
 
 
 async def explain_calibration_gap(

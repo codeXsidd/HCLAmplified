@@ -1,4 +1,4 @@
-# SkillPulse — HCL Amplified
+# SkillPulse
 
 An intelligent learning platform that models learner knowledge as a **living Bayesian system** — not a static checklist. SkillPulse tracks skill mastery, detects decay, identifies transfer opportunities between skills, and delivers personalized learning recommendations.
 
@@ -14,11 +14,13 @@ An intelligent learning platform that models learner knowledge as a **living Bay
 ## Architecture
 
 ```
-HCLAmplified/
+SkillPulse/
 ├── frontend/          Next.js 14 + TypeScript + Tailwind CSS + Radix UI
 ├── backend/           FastAPI + SQLAlchemy + PostgreSQL (Neon)
-└── docs/              API reference
+└── docs/              API reference + architecture docs
 ```
+
+
 
 ### Backend (`/backend`)
 

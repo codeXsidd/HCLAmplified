@@ -1,6 +1,16 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 export const DEMO_LEARNER_ID = process.env.NEXT_PUBLIC_DEMO_LEARNER_ID || "priya-demo-001"
 
+export function getLearnerID(): string {
+  if (typeof window === "undefined") return DEMO_LEARNER_ID
+  let id = localStorage.getItem("skillpulse:learner_id")
+  if (!id) {
+    id = `learner-${crypto.randomUUID().slice(0, 8)}`
+    localStorage.setItem("skillpulse:learner_id", id)
+  }
+  return id
+}
+
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     headers: { "Content-Type": "application/json" },
@@ -43,7 +53,7 @@ export const api = {
     }),
 
   setGoal: (learnerId: string, goal: string, background?: string) =>
-    apiFetch<{ success: boolean }>("/api/onboarding/goal", {
+    apiFetch<{ message: string; domain_name?: string; domain_pack_id?: string; self_assessment_skills?: Array<{ name: string }> }>("/api/onboarding/goal", {
       method: "POST",
       body: JSON.stringify({ learner_id: learnerId, goal, background }),
     }),
@@ -71,6 +81,15 @@ export const api = {
       `/api/onboarding/reset-demo?learner_id=${learnerId}`,
       { method: "POST" }
     ),
+
+  discoverDomain: (goal: string, background?: string, learnerId?: string) =>
+    apiFetch<DomainDiscoverResponse>("/api/domain/discover", {
+      method: "POST",
+      body: JSON.stringify({ goal, background: background ?? "", learner_id: learnerId ?? "" }),
+    }),
+
+  getAdaptiveAssessment: (learnerId: string, n = 8) =>
+    apiFetch<DiagnosticResponse>(`/api/assessment/adaptive/${learnerId}?n=${n}`),
 }
 
 // ---- Types ----
@@ -211,4 +230,19 @@ export interface SubmitResponseResult {
   correct: boolean
   explanation: string
   updated_state: SkillState
+}
+
+export interface DomainDiscoverResponse {
+  pack_id: string
+  domain_name: string
+  competency_count: number
+  goal_skills: string[]
+  competencies: Array<{
+    name: string
+    difficulty: number
+    estimated_hours: number
+    is_goal_skill: boolean
+  }>
+  prerequisite_edge_count: number
+  transfer_edge_count: number
 }

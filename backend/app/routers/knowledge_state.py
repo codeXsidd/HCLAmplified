@@ -58,19 +58,54 @@ def _enrich_state(skill_name: str, state: dict) -> dict:
 def get_knowledge_state(learner_id: str):
     store = get_memory_store()
     raw_states = store["learner_skill_states"].get(learner_id, {})
+
+    if learner_id != _DEMO_LEARNER_ID:
+        active_graph = _get_active_graph(learner_id)
+        if active_graph is None:
+            return {"learner_id": learner_id, "skills": {}}
+        # Filter to skills in current domain pack — removes stale data from old domains
+        pack_names = {s["name"] for s in active_graph.get_all_skills()}
+        raw_states = {k: v for k, v in raw_states.items() if k in pack_names}
+
     enriched = {
         name: _enrich_state(name, state) for name, state in raw_states.items()
     }
     return {"learner_id": learner_id, "skills": enriched}
 
 
+_DEMO_LEARNER_ID = "priya-demo-001"
+
+
+def _get_active_graph(learner_id: str):
+    """Return DomainGraph if learner has a domain pack; static graph only for demo learner; None otherwise."""
+    try:
+        from app.models.db_models import Learner
+        from app.database import SessionLocal
+        from app.core.domain_graph import DomainGraph
+        from app.services.domain_service import get_pack_by_id
+        db = SessionLocal()
+        row = db.get(Learner, learner_id)
+        db.close()
+        if row and row.domain_pack_id:
+            pack = get_pack_by_id(row.domain_pack_id)
+            if pack:
+                return DomainGraph(pack["pack_data"])
+    except Exception:
+        pass
+    return skill_graph if learner_id == _DEMO_LEARNER_ID else None
+
+
 @router.get("/{learner_id}/graph", response_model=KnowledgeGraphOut)
 def get_knowledge_graph(learner_id: str):
     store = get_memory_store()
     raw_states = store["learner_skill_states"].get(learner_id, {})
+    active_graph = _get_active_graph(learner_id)
+
+    if active_graph is None:
+        return {"nodes": [], "links": []}
 
     nodes = []
-    for skill in skill_graph.get_all_skills():
+    for skill in active_graph.get_all_skills():
         name = skill["name"]
         state = raw_states.get(name)
         if state:
@@ -112,7 +147,7 @@ def get_knowledge_graph(learner_id: str):
         )
 
     links = []
-    for edge in skill_graph.get_all_edges():
+    for edge in active_graph.get_all_edges():
         link_type = edge.get("link_type", "prerequisite")
         color = "#3b82f6" if link_type == "transfer" else "#4b5563"
         links.append(
@@ -132,8 +167,22 @@ def get_knowledge_graph(learner_id: str):
 
 @router.get("/{learner_id}/insights", response_model=LearnerInsightsOut)
 def get_insights(learner_id: str):
+    insights_graph = _get_active_graph(learner_id)
+
+    if learner_id != _DEMO_LEARNER_ID and insights_graph is None:
+        return LearnerInsightsOut(
+            total_skills_started=0, solid_skills=0, decaying_skills=0,
+            overconfident_skills=0, learning_skills=0,
+            calibration_data=[], critical_decays=[], transfer_opportunities=[],
+        )
+
     store = get_memory_store()
     raw_states = store["learner_skill_states"].get(learner_id, {})
+
+    # Filter to current domain pack skills only
+    if learner_id != _DEMO_LEARNER_ID and insights_graph:
+        pack_names = {s["name"] for s in insights_graph.get_all_skills()}
+        raw_states = {k: v for k, v in raw_states.items() if k in pack_names}
 
     enriched_list = [_enrich_state(name, state) for name, state in raw_states.items()]
 
@@ -164,7 +213,7 @@ def get_insights(learner_id: str):
         for name, s in raw_states.items()
     }
     transfer_opportunities = []
-    for skill in skill_graph.get_all_skills():
+    for skill in (insights_graph.get_all_skills() if insights_graph else []):
         if skill["name"] not in raw_states:
             t = transfer_analyzer.compute_effective_prior(skill["name"], learner_state_map)
             if t["effective_transfer"] > 0.2:

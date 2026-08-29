@@ -2,14 +2,14 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { api, DEMO_LEARNER_ID } from "@/lib/api"
+import { api, getLearnerID } from "@/lib/api"
 import AppNav from "@/components/shared/AppNav"
 
 const PRESET_GOALS = [
-  { label: "ML Engineer", desc: "Python, NumPy, Pandas, Sklearn, Deep Learning", icon: "ML" },
-  { label: "Data Scientist", desc: "Statistics, SQL, Visualization, Hypothesis Testing", icon: "DS" },
-  { label: "Backend Engineer", desc: "Python, APIs, Databases, System Design", icon: "BE" },
-  { label: "AI Researcher", desc: "Linear Algebra, Probability, Deep Learning, Papers", icon: "AI" },
+  { label: "ML Engineer", desc: "Python, statistics, model training, deployment", icon: "ML" },
+  { label: "Classical Guitarist", desc: "Right-hand technique, sight-reading, repertoire", icon: "🎸" },
+  { label: "Stage Magician", desc: "Sleight of hand, misdirection, patter, routines", icon: "🎩" },
+  { label: "Quantum Physicist", desc: "Linear algebra, wave mechanics, Schrödinger equation", icon: "⚛" },
 ]
 
 export default function GoalsPage() {
@@ -24,7 +24,11 @@ export default function GoalsPage() {
     setSaving(true)
     setError("")
     try {
-      await api.setGoal(DEMO_LEARNER_ID, goal, "")
+      const result = await api.setGoal(getLearnerID(), goal, "")
+      if (typeof window !== "undefined") {
+        localStorage.setItem("skillpulse:goal", goal)
+        if (result.domain_name) localStorage.setItem("skillpulse:name", result.domain_name)
+      }
       setSaved(true)
       setTimeout(() => router.push("/path"), 1500)
     } catch {

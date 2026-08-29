@@ -28,24 +28,32 @@ class TransferAnalyzer:
     """
     Computes how much existing skill mastery reduces learning effort for new skills.
     Transfer coefficient: 0 = no help, 1 = already know it.
+    Supports both the static ML seed matrix and dynamic domain pack transfer maps.
     """
 
-    def get_transfer_coefficient(self, source_skill: str, target_skill: str) -> float:
+    def get_transfer_coefficient(
+        self, source_skill: str, target_skill: str,
+        transfer_map: Optional[Dict] = None,
+    ) -> float:
+        matrix = transfer_map if transfer_map is not None else _transfer_matrix
         key = f"{source_skill}::{target_skill}"
-        entry = _transfer_matrix.get(key)
+        entry = matrix.get(key)
         return entry["transfer_coefficient"] if entry else 0.0
 
     def get_transfer_explanation(
-        self, source_skill: str, target_skill: str
+        self, source_skill: str, target_skill: str,
+        transfer_map: Optional[Dict] = None,
     ) -> Optional[str]:
+        matrix = transfer_map if transfer_map is not None else _transfer_matrix
         key = f"{source_skill}::{target_skill}"
-        entry = _transfer_matrix.get(key)
+        entry = matrix.get(key)
         return entry.get("explanation") if entry else None
 
     def compute_effective_prior(
         self,
         target_skill: str,
         learner_states: Dict[str, Dict],
+        transfer_map: Optional[Dict] = None,
     ) -> Dict[str, Any]:
         """
         Given what the learner knows, compute their effective head-start on target_skill.
@@ -59,13 +67,13 @@ class TransferAnalyzer:
             if source_mastery < 0.3:
                 continue
 
-            coeff = self.get_transfer_coefficient(source_skill, target_skill)
+            coeff = self.get_transfer_coefficient(source_skill, target_skill, transfer_map)
             if coeff <= 0:
                 continue
 
             effective = source_mastery * coeff
             total_transfer += effective
-            explanation = self.get_transfer_explanation(source_skill, target_skill)
+            explanation = self.get_transfer_explanation(source_skill, target_skill, transfer_map)
 
             transfer_sources.append(
                 {

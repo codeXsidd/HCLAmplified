@@ -4,12 +4,12 @@ import { useState, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
 import { Suspense } from "react"
 import Link from "next/link"
-import { api, DEMO_LEARNER_ID } from "@/lib/api"
+import { api, getLearnerID } from "@/lib/api"
 import AppNav from "@/components/shared/AppNav"
 
 function LearnInner() {
   const searchParams = useSearchParams()
-  const skill = searchParams.get("skill") || "Python Basics"
+  const skill = searchParams.get("skill") || "Foundations"
   const [question, setQuestion] = useState<any>(null)
   const [selected, setSelected] = useState<number | null>(null)
   const [submitted, setSubmitted] = useState(false)
@@ -18,7 +18,7 @@ function LearnInner() {
   const [result, setResult] = useState<any>(null)
 
   useEffect(() => {
-    api.getDiagnostic(DEMO_LEARNER_ID, [skill])
+    api.getDiagnostic(getLearnerID(), [skill])
       .then((res) => {
         if (res.items && res.items.length > 0) setQuestion(res.items[0])
       })
@@ -30,7 +30,7 @@ function LearnInner() {
     if (selected === null || !question) return
     try {
       const res = await api.submitResponse({
-        learner_id: DEMO_LEARNER_ID,
+        learner_id: getLearnerID(),
         assessment_item_id: question.id,
         skill_id: question.skill_name || skill,
         response: selected,
@@ -50,7 +50,7 @@ function LearnInner() {
       <div className="max-w-2xl mx-auto px-4 py-10">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-slate-500 mb-8">
-          <Link href="/dashboard?demo=true" className="hover:text-indigo-600">Dashboard</Link>
+          <Link href="/dashboard" className="hover:text-indigo-600">Dashboard</Link>
           <span>/</span>
           <span className="text-slate-700 font-medium">{skill}</span>
         </div>
@@ -140,7 +140,7 @@ function LearnInner() {
                   </button>
                 ) : (
                   <Link
-                    href="/dashboard?demo=true"
+                    href="/dashboard"
                     className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-all text-sm text-center"
                   >
                     Back to Dashboard
@@ -151,7 +151,7 @@ function LearnInner() {
           ) : (
             <div className="text-center py-8">
               <p className="text-slate-500 text-sm mb-4">No practice question available for this skill.</p>
-              <Link href="/dashboard?demo=true" className="text-indigo-600 hover:text-indigo-800 text-sm font-medium">
+              <Link href="/dashboard" className="text-indigo-600 hover:text-indigo-800 text-sm font-medium">
                 Back to Dashboard
               </Link>
             </div>

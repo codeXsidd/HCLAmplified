@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Link from "next/link"
 
 const features = [
@@ -42,6 +43,18 @@ const nodeShowcase = [
 ]
 
 export default function LandingPage() {
+  const [returningUser, setReturningUser] = useState(false)
+  const [savedGoal, setSavedGoal] = useState("")
+
+  useEffect(() => {
+    const id = localStorage.getItem("skillpulse:learner_id")
+    const goal = localStorage.getItem("skillpulse:goal")
+    if (id && goal) {
+      setReturningUser(true)
+      setSavedGoal(goal)
+    }
+  }, [])
+
   return (
     <div className="min-h-screen bg-white text-slate-900">
       {/* Nav */}
@@ -62,11 +75,6 @@ export default function LandingPage() {
 
       {/* Hero */}
       <section className="max-w-5xl mx-auto px-8 pt-20 pb-16 text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold mb-8">
-          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-          HCLTech Amplified Hackathon 2026
-        </div>
-
         <h1 className="text-5xl md:text-6xl font-bold leading-tight mb-6 text-slate-900">
           A living model of
           <br />
@@ -79,21 +87,36 @@ export default function LandingPage() {
         </p>
 
         <p className="text-sm text-slate-400 mb-12 max-w-xl mx-auto">
-          Not a ChatGPT wrapper. Real Bayesian inference · Exponential decay modeling · Transfer intelligence · Graph algorithms
+          Real Bayesian inference · Exponential decay modeling · Transfer intelligence · Graph algorithms
         </p>
 
+        {returningUser && (
+          <div className="mb-6 inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 border border-indigo-200 rounded-xl text-sm text-indigo-700">
+            <span className="w-2 h-2 rounded-full bg-indigo-500" />
+            Welcome back — continuing: <span className="font-semibold ml-1 truncate max-w-xs">{savedGoal}</span>
+          </div>
+        )}
         <div className="flex items-center justify-center gap-4 flex-wrap">
+          {returningUser ? (
+            <Link
+              href="/dashboard"
+              className="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-all shadow-sm shadow-indigo-200 text-lg"
+            >
+              Continue Learning →
+            </Link>
+          ) : (
+            <Link
+              href="/onboard"
+              className="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-all shadow-sm shadow-indigo-200 text-lg"
+            >
+              Start Learning
+            </Link>
+          )}
           <Link
             href="/dashboard?demo=true"
-            className="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-all shadow-sm shadow-indigo-200 text-lg"
-          >
-            Start Demo — Meet Priya
-          </Link>
-          <Link
-            href="/onboard"
             className="px-8 py-4 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-medium rounded-xl transition-all text-lg"
           >
-            Onboard Yourself
+            View Demo
           </Link>
         </div>
       </section>
@@ -142,7 +165,7 @@ export default function LandingPage() {
       {/* Bottom CTA */}
       <section className="text-center pb-20 px-8">
         <p className="text-slate-400 text-sm mb-4">
-          Built for HCLTech Amplified · Bayesian inference + Graph intelligence + LLM reasoning
+          Bayesian inference + Graph intelligence + LLM reasoning
         </p>
         <Link href="/dashboard?demo=true" className="text-indigo-600 hover:text-indigo-800 text-sm font-medium underline underline-offset-4">
           Launch the live demo

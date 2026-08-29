@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { DEMO_LEARNER_ID } from "@/lib/api"
+import { getLearnerID } from "@/lib/api"
 import AppNav from "@/components/shared/AppNav"
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000")
@@ -13,18 +13,28 @@ interface Message {
 
 const SUGGESTED = [
   "What should I study next?",
-  "Why is Linear Algebra important for ML?",
-  "How do I stop forgetting SQL?",
-  "Am I on track for my ML Engineer goal?",
+  "Which skills am I at risk of forgetting?",
+  "What's the fastest path to my goal?",
+  "Where are my knowledge gaps?",
 ]
 
 export default function AssistantPage() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "assistant",
-      content: "Hi Priya! I'm your SkillPulse learning coach. I can see your current knowledge state and help guide your learning path. What would you like to know?",
-    },
-  ])
+  const [goal, setGoal] = useState("")
+
+  useEffect(() => {
+    const saved = localStorage.getItem("skillpulse:goal")
+    if (saved) setGoal(saved)
+  }, [])
+
+  const greeting = goal
+    ? `Hi! I'm your SkillPulse learning coach. I can see you're working towards: "${goal}". I have full visibility into your knowledge state — what would you like to know?`
+    : "Hi! I'm your SkillPulse learning coach. I can see your current knowledge state and help guide your learning path. What would you like to know?"
+
+  const [messages, setMessages] = useState<Message[]>([])
+
+  useEffect(() => {
+    if (greeting) setMessages([{ role: "assistant", content: greeting }])
+  }, [greeting])
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -46,7 +56,7 @@ export default function AssistantPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          learner_id: DEMO_LEARNER_ID,
+          learner_id: getLearnerID(),
           message: text,
           history: newMessages.slice(-6).map((m) => ({ role: m.role, content: m.content })),
         }),

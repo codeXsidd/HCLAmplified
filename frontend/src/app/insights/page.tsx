@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { api, DEMO_LEARNER_ID, type InsightsResponse, type RecommendationsResponse, type Recommendation } from "@/lib/api"
+import { api, getLearnerID, type InsightsResponse, type RecommendationsResponse, type Recommendation } from "@/lib/api"
 import AppNav from "@/components/shared/AppNav"
 import CalibrationChart from "@/components/dashboard/CalibrationChart"
 import RecommendationCard from "@/components/dashboard/RecommendationCard"
@@ -21,10 +21,11 @@ export default function InsightsPage() {
     const load = async () => {
       setLoading(true)
       try {
+        const learnerId = getLearnerID()
         const [ins, recs, state] = await Promise.all([
-          api.getInsights(DEMO_LEARNER_ID),
-          api.getRecommendations(DEMO_LEARNER_ID, 10),
-          api.getKnowledgeState(DEMO_LEARNER_ID),
+          api.getInsights(learnerId),
+          api.getRecommendations(learnerId, 10),
+          api.getKnowledgeState(learnerId),
         ])
         setInsights(ins)
         setRecommendations(recs)

@@ -7,6 +7,7 @@ import dynamic from "next/dynamic"
 import {
   api,
   DEMO_LEARNER_ID,
+  getLearnerID,
   type GraphNode,
   type GraphLink,
   type InsightsResponse,
@@ -48,12 +49,13 @@ function DashboardInner() {
     setLoading(true)
     setError("")
     try {
+      const activeId = isDemo ? DEMO_LEARNER_ID : getLearnerID()
       if (isDemo) await api.loadDemo()
       const [graph, ins, recs, state] = await Promise.all([
-        api.getKnowledgeGraph(DEMO_LEARNER_ID),
-        api.getInsights(DEMO_LEARNER_ID),
-        api.getRecommendations(DEMO_LEARNER_ID, 5),
-        api.getKnowledgeState(DEMO_LEARNER_ID),
+        api.getKnowledgeGraph(activeId),
+        api.getInsights(activeId),
+        api.getRecommendations(activeId, 5),
+        api.getKnowledgeState(activeId),
       ])
       setNodes(graph.nodes)
       setLinks(graph.links)
@@ -85,11 +87,12 @@ function DashboardInner() {
 
   const handleDiagnosticRun = async () => {
     try {
+      const activeId = isDemo ? DEMO_LEARNER_ID : getLearnerID()
       const overconfident = nodes
         .filter((n) => n.state_label === "overconfident" || n.state_label === "decaying")
         .slice(0, 4)
         .map((n) => n.name)
-      const res = await api.getDiagnostic(DEMO_LEARNER_ID, overconfident)
+      const res = await api.getDiagnostic(activeId, overconfident)
       setDiagnosticItems(res.items)
       setShowDiagnostic(true)
     } catch {
@@ -105,7 +108,7 @@ function DashboardInner() {
     timeMs: number
   ): Promise<SubmitResponseResult> => {
     return api.submitResponse({
-      learner_id: DEMO_LEARNER_ID,
+      learner_id: isDemo ? DEMO_LEARNER_ID : getLearnerID(),
       assessment_item_id: itemId,
       skill_id: skillId,
       response,
@@ -166,6 +169,17 @@ function DashboardInner() {
                 <div className="text-center text-slate-400">
                   <div className="text-3xl mb-2 animate-pulse text-indigo-300">◎</div>
                   <div className="text-sm">Building your knowledge model...</div>
+                </div>
+              </div>
+            ) : nodes.length === 0 && !isDemo ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center max-w-xs px-6">
+                  <div className="text-4xl mb-3">🎯</div>
+                  <div className="font-semibold text-slate-700 mb-2">No knowledge graph yet</div>
+                  <p className="text-sm text-slate-400 mb-5">Complete onboarding to generate your personalized competency graph.</p>
+                  <a href="/onboard" className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors">
+                    Start Onboarding →
+                  </a>
                 </div>
               </div>
             ) : (
@@ -337,7 +351,7 @@ function DashboardInner() {
       {showDiagnostic && diagnosticItems.length > 0 && (
         <DiagnosticFlow
           items={diagnosticItems}
-          learnerId={DEMO_LEARNER_ID}
+          learnerId={isDemo ? DEMO_LEARNER_ID : getLearnerID()}
           onSubmit={handleSubmitResponse}
           onComplete={handleDiagnosticComplete}
           onClose={() => setShowDiagnostic(false)}
@@ -358,6 +372,7 @@ function DashboardInner() {
         <RecommendationExplanation
           recommendation={selectedRecommendation}
           onClose={() => setSelectedRecommendation(null)}
+          learnerId={isDemo ? DEMO_LEARNER_ID : getLearnerID()}
         />
       )}
     </div>

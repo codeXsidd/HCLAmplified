@@ -1,11 +1,12 @@
 "use client"
 import { useEffect, useState } from "react"
 import type { Recommendation, TransferSource } from "@/lib/api"
-import { api, DEMO_LEARNER_ID } from "@/lib/api"
+import { api, getLearnerID } from "@/lib/api"
 
 interface Props {
   recommendation: Recommendation | null
   onClose: () => void
+  learnerId?: string
 }
 
 const urgencyColors: Record<string, string> = {
@@ -22,7 +23,7 @@ const FACTORS = [
   { label: "Transfer",  key: "transfer",  color: "#a855f7", desc: "Free knowledge" },
 ] as const
 
-export default function RecommendationExplanation({ recommendation, onClose }: Props) {
+export default function RecommendationExplanation({ recommendation, onClose, learnerId }: Props) {
   const [explanation, setExplanation] = useState("")
   const [loading, setLoading] = useState(false)
 
@@ -34,7 +35,7 @@ export default function RecommendationExplanation({ recommendation, onClose }: P
     }
     setLoading(true)
     api
-      .getRecommendationExplanation(DEMO_LEARNER_ID, recommendation.skill_name)
+      .getRecommendationExplanation(learnerId ?? getLearnerID(), recommendation.skill_name)
       .then((r) => setExplanation(r.explanation ?? ""))
       .catch(() => setExplanation("Explanation unavailable."))
       .finally(() => setLoading(false))
