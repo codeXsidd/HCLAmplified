@@ -121,11 +121,11 @@ app.include_router(assistant.router, prefix="/api/assistant", tags=["assistant"]
 app.include_router(domain.router, prefix="/api/domain", tags=["domain"])
 
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 def root():
     return {"status": "ok", "app": "SkillPulse API", "version": "1.0.0"}
 
 
-@app.get("/health")
+@app.api_route("/health", methods=["GET", "HEAD"])
 def health():
     return {"status": "healthy"}
