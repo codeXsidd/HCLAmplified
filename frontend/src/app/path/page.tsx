@@ -26,11 +26,14 @@ export default function PathPage() {
     const load = async () => {
       try {
         const learnerId = getLearnerID()
-        const [state, recs, ins] = await Promise.all([
+        const [stateRes, recsRes, insRes] = await Promise.allSettled([
           api.getKnowledgeState(learnerId),
           api.getRecommendations(learnerId, 12),
           api.getInsights(learnerId),
         ])
+        const state = stateRes.status === "fulfilled" ? stateRes.value : { skills: {} }
+        const recs = recsRes.status === "fulfilled" ? recsRes.value : { recommendations: [] }
+        const ins = insRes.status === "fulfilled" ? insRes.value : null
         setInsights(ins)
 
         const skills = state.skills ?? {}

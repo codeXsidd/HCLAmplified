@@ -66,32 +66,29 @@ def _validate_pack(pack: dict) -> list[str]:
     return errors
 
 
+_DOMAIN_SYSTEM = (
+    "You are a learning domain expert. "
+    "Output ONLY valid JSON — no markdown, no text outside the JSON object."
+)
+
+_DOMAIN_SCHEMA = (
+    '{"domain_name":"Short Name","level":"beginner|intermediate|advanced|general",'
+    '"competencies":[{"id":"kebab-id","name":"Name","description":"One sentence.",'
+    '"difficulty":0.5,"estimated_hours":5,"is_goal_skill":true}],'
+    '"prerequisite_edges":[{"source":"id","target":"id","strength":0.8}],'
+    '"transfer_edges":[{"source":"id","target":"id","coefficient":0.4,"explanation":"How it helps."}]}'
+)
+
+
 async def _generate_domain_pack(goal: str, background: str = "") -> Optional[dict]:
     """Call LLM to generate a domain pack. Returns parsed dict or None on failure."""
     prompt = (
-        f"You are a learning domain expert. Given a learner's goal, generate a structured competency model.\n\n"
-        f"Goal: \"{goal}\"\n"
-        f"Background: \"{background or 'not specified'}\"\n\n"
-        f"Generate a JSON object with exactly these keys:\n"
-        f"1. \"domain_name\": short human-readable name for this domain (e.g. \"Classical Guitar\")\n"
-        f"2. \"level\": one of beginner, intermediate, advanced, general\n"
-        f"3. \"competencies\": array of 25-40 competencies, each with:\n"
-        f"   - \"id\": short kebab-case unique identifier (e.g. \"right-hand-technique\")\n"
-        f"   - \"name\": human-readable name\n"
-        f"   - \"description\": one sentence\n"
-        f"   - \"difficulty\": float 0.0-1.0\n"
-        f"   - \"estimated_hours\": typical hours to learn\n"
-        f"   - \"is_goal_skill\": true if directly required to achieve the stated goal\n"
-        f"4. \"prerequisite_edges\": array of {{\"source\": id, \"target\": id, \"strength\": 0.0-1.0}}\n"
-        f"   meaning: you need source before you can learn target\n"
-        f"5. \"transfer_edges\": array of {{\"source\": id, \"target\": id, \"coefficient\": 0.0-0.6, \"explanation\": \"one sentence\"}}\n"
-        f"   meaning: knowing source meaningfully accelerates learning target\n\n"
-        f"Rules:\n"
-        f"- Competency ids must be unique kebab-case strings\n"
-        f"- Prerequisite edges must form a DAG (no cycles)\n"
-        f"- Transfer coefficient max 0.6 (never 1.0 — it just helps, not replaces)\n"
-        f"- Include foundational skills even if learner may already know them\n"
-        f"- Return ONLY valid JSON, no markdown, no explanation text"
+        f'Goal: "{goal}"\n'
+        f'Background: "{background or "general learner"}"\n\n'
+        f"Generate a competency model using this schema:\n{_DOMAIN_SCHEMA}\n\n"
+        f"Requirements: 25-40 competencies, unique kebab IDs, "
+        f"prerequisite edges form a DAG (no cycles), transfer coefficient ≤ 0.6, "
+        f"include foundational skills."
     )
 
     default_pack = {
@@ -112,7 +109,13 @@ async def _generate_domain_pack(goal: str, background: str = "") -> Optional[dic
         "transfer_edges": [],
     }
 
-    result = await llm_call(prompt, json.dumps(default_pack), max_tokens=3000)
+    result = await llm_call(
+        prompt,
+        default=json.dumps(default_pack),
+        max_tokens=3000,
+        system=_DOMAIN_SYSTEM,
+        temperature=0.2,
+    )
     if not result:
         return default_pack
 
@@ -120,19 +123,20 @@ async def _generate_domain_pack(goal: str, background: str = "") -> Optional[dic
     if pack:
         return pack
 
-    # Retry with a stricter, more concise prompt
+    # Retry with minimal prompt
     print("[domain_service] Retrying with concise prompt due to parse failure")
     retry_prompt = (
-        f"Return ONLY a valid JSON object (no markdown, no explanation) for this learning goal: \"{goal}\"\n\n"
-        f"Required structure:\n"
-        f'{{"domain_name":"...","level":"beginner","competencies":['
-        f'{{"id":"skill-1","name":"Skill Name","description":"One sentence.","difficulty":0.3,"estimated_hours":5,"is_goal_skill":true}},'
-        f"... 15-25 total competencies ...],"
-        f'"prerequisite_edges":[{{"source":"skill-1","target":"skill-2","strength":0.8}}],'
-        f'"transfer_edges":[]}}\n\n'
-        f"IMPORTANT: Return valid JSON only. Start with {{ and end with }}."
+        f'Learning goal: "{goal}"\n'
+        f"Schema: {_DOMAIN_SCHEMA}\n"
+        f"15-25 competencies. Start with {{ end with }}."
     )
-    result2 = await llm_call(retry_prompt, json.dumps(default_pack), max_tokens=2000)
+    result2 = await llm_call(
+        retry_prompt,
+        default=json.dumps(default_pack),
+        max_tokens=2000,
+        system=_DOMAIN_SYSTEM,
+        temperature=0.2,
+    )
     if result2:
         pack = _try_parse_json(result2)
         if pack:
@@ -237,35 +241,42 @@ def _save_pack_to_db(pack_id: str, goal: str, goal_normalized: str, pack: dict) 
             )
             db.merge(comp)
 
-        # Save edges
-        for edge in pack.get("prerequisite_edges", []):
-            e = CompetencyEdge(
-                domain_pack_id=pack_id,
-                source_id=f"{pack_id}::{edge['source']}",
-                target_id=f"{pack_id}::{edge['target']}",
-                edge_type="prerequisite",
-                strength=edge.get("strength", 0.8),
-            )
-            db.add(e)
-
-        for edge in pack.get("transfer_edges", []):
-            e = CompetencyEdge(
-                domain_pack_id=pack_id,
-                source_id=f"{pack_id}::{edge['source']}",
-                target_id=f"{pack_id}::{edge['target']}",
-                edge_type="transfer",
-                strength=edge.get("coefficient", 0.3),
-                transfer_coefficient=edge.get("coefficient", 0.3),
-                explanation=edge.get("explanation"),
-            )
-            db.add(e)
-
+        # Commit pack + competencies BEFORE edges so edge errors never roll them back
         db.commit()
         db.close()
         print(f"[domain_service] Saved domain pack '{pack_id}' with "
               f"{len(pack.get('competencies', []))} competencies")
     except Exception as e:
         print(f"[domain_service] Failed to save pack to DB: {e}")
+        return
+
+    # Save edges in individual sessions so duplicate/FK errors are isolated
+    all_edges = [
+        {**edge, "_type": "prerequisite"} for edge in pack.get("prerequisite_edges", [])
+    ] + [
+        {**edge, "_type": "transfer"} for edge in pack.get("transfer_edges", [])
+    ]
+    saved = 0
+    for edge in all_edges:
+        try:
+            from app.models.db_models import CompetencyEdge
+            edb = SessionLocal()
+            e = CompetencyEdge(
+                domain_pack_id=pack_id,
+                source_id=f"{pack_id}::{edge.get('source', '')}",
+                target_id=f"{pack_id}::{edge.get('target', '')}",
+                edge_type=edge["_type"],
+                strength=edge.get("strength", edge.get("coefficient", 0.8)),
+                transfer_coefficient=edge.get("coefficient") if edge["_type"] == "transfer" else None,
+                explanation=edge.get("explanation"),
+            )
+            edb.add(e)
+            edb.commit()
+            edb.close()
+            saved += 1
+        except Exception:
+            pass  # skip duplicate or invalid edges silently
+    print(f"[domain_service] Saved {saved}/{len(all_edges)} edges for '{pack_id}'")
 
 
 async def discover_domain(goal: str, background: str = "", learner_id: str = "") -> dict:

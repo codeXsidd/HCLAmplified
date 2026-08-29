@@ -82,6 +82,12 @@ export const api = {
       { method: "POST" }
     ),
 
+  clearProgress: (learnerId: string) =>
+    apiFetch<{ message: string }>(
+      `/api/onboarding/clear-progress?learner_id=${learnerId}`,
+      { method: "POST" }
+    ),
+
   discoverDomain: (goal: string, background?: string, learnerId?: string) =>
     apiFetch<DomainDiscoverResponse>("/api/domain/discover", {
       method: "POST",

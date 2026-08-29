@@ -1,7 +1,6 @@
 """
-LLM service using Groq API (llama-3.3-70b-versatile).
-All responses are cached to JSON file to ensure demo reliability.
-If GROQ_API_KEY is missing or API fails, serves from cache or default.
+LLM service using Groq API (qwen3.8-27b).
+All responses are cached to avoid re-calling Groq during dev/demo.
 """
 import json
 import os
@@ -31,16 +30,22 @@ def _save_cache():
         print(f"Cache save failed: {e}")
 
 
-def _cache_key(prompt: str) -> str:
-    return hashlib.md5(prompt.encode()).hexdigest()[:16]
+def _cache_key(system: str, prompt: str) -> str:
+    return hashlib.md5(f"{system}|||{prompt}".encode()).hexdigest()[:16]
 
 
 _load_cache()
 
 
-async def llm_call(prompt: str, default: str = "", max_tokens: int = 800) -> str:
+async def llm_call(
+    prompt: str,
+    default: str = "",
+    max_tokens: int = 800,
+    system: str = "",
+    temperature: float = 0.4,
+) -> str:
     """Call Groq API with cache. Returns cached result or default on failure."""
-    key = _cache_key(prompt)
+    key = _cache_key(system, prompt)
     if key in _cache:
         return _cache[key]
 
@@ -50,10 +55,15 @@ async def llm_call(prompt: str, default: str = "", max_tokens: int = 800) -> str
     try:
         from groq import Groq
         client = Groq(api_key=settings.GROQ_API_KEY)
+        messages = []
+        if system:
+            messages.append({"role": "system", "content": system})
+        messages.append({"role": "user", "content": prompt})
         msg = client.chat.completions.create(
             model="qwen/qwen3.8-27b",
             max_tokens=max_tokens,
-            messages=[{"role": "user", "content": prompt}]
+            temperature=temperature,
+            messages=messages,
         )
         result = msg.choices[0].message.content
         _cache[key] = result
@@ -68,89 +78,66 @@ async def explain_recommendation(
     skill_name: str,
     factors: dict,
     transfer_sources: list,
-    urgency_level: str
+    urgency_level: str,
 ) -> str:
-    """Generate a natural language explanation for a recommendation."""
     transfer_str = ""
     if transfer_sources:
         t = transfer_sources[0]
-        transfer_str = (
-            f"The learner's {t.get('source_skill', '')} knowledge "
-            f"transfers {t.get('time_savings_percent', 0)}% of the effort needed."
-        )
+        transfer_str = f" Your {t.get('source_skill','')} knowledge saves {t.get('time_savings_percent',0)}% of the effort."
 
-    default_explanations = {
-        "critical": (
-            f"[URGENT] {skill_name} is actively decaying -- recall probability has dropped "
-            f"below 50%. Every day of delay increases re-learning cost. "
-            f"15 minutes now saves hours later. {transfer_str}"
-        ),
-        "high": (
-            f"[HIGH IMPACT] {skill_name} is a high-impact next step -- unlocks "
-            f"{int(factors.get('impact', 0) * 100)}% of your remaining path "
-            f"with {int(factors.get('readiness', 0) * 100)}% prerequisites met. {transfer_str}"
-        ),
-        "medium": (
-            f"[NEXT STEP] {skill_name} is logically next: prerequisites satisfied "
-            f"and it moves you closer to your ML Engineer goal. {transfer_str}"
-        ),
-        "low": (
-            f"[AVAILABLE] {skill_name} is available whenever you're ready -- "
-            f"a solid addition to your path. {transfer_str}"
-        ),
+    defaults = {
+        "critical": f"[URGENT] {skill_name} is actively decaying — recall <50%. 15 min now saves hours later.{transfer_str}",
+        "high": f"[HIGH IMPACT] {skill_name} unlocks {int(factors.get('impact',0)*100)}% of your remaining path with {int(factors.get('readiness',0)*100)}% prerequisites met.{transfer_str}",
+        "medium": f"[NEXT STEP] {skill_name} prerequisites are satisfied and it moves you closer to your goal.{transfer_str}",
+        "low": f"[AVAILABLE] {skill_name} is ready to learn — solid addition to your path.{transfer_str}",
     }
 
+    r, u, im, tr = (
+        factors.get("readiness", 0),
+        factors.get("urgency", 0),
+        factors.get("impact", 0),
+        factors.get("transfer", 0),
+    )
     prompt = (
-        f'You are an intelligent learning coach. Explain in 1-2 sentences (max 50 words) '
-        f'why a learner should study "{skill_name}" next.\n\n'
-        f"Factors (0-1 scale):\n"
-        f"- Readiness (prerequisites met): {factors.get('readiness', 0):.2f}\n"
-        f"- Urgency (decay + blocking): {factors.get('urgency', 0):.2f}\n"
-        f"- Decay urgency specifically: {factors.get('decay_urgency', 0):.2f}\n"
-        f"- Impact (goal skills unlocked): {factors.get('impact', 0):.2f}\n"
-        f"- Transfer (existing knowledge helps): {factors.get('transfer', 0):.2f}\n"
-        f"- Transfer details: {transfer_str}\n"
-        f"- Urgency level: {urgency_level}\n\n"
-        f"Be specific, not generic. Mention decay, transfer, or impact if relevant. "
-        f"No bullet points."
+        f'Why study "{skill_name}" next?\n'
+        f"Readiness:{r:.2f} Urgency:{u:.2f} Impact:{im:.2f} Transfer:{tr:.2f} Level:{urgency_level}"
+        f"{transfer_str}"
     )
 
     return await llm_call(
         prompt,
-        default_explanations.get(urgency_level, default_explanations["low"])
+        default=defaults.get(urgency_level, defaults["low"]),
+        max_tokens=80,
+        system="You are a learning coach. In 1-2 sentences (≤40 words), explain why this skill is recommended. Be specific — mention decay, transfer, or prerequisites if high. No bullet points.",
+        temperature=0.5,
     )
 
 
 async def generate_assessment_question(
     skill_name: str, difficulty: float = 0.5
 ) -> Optional[dict]:
-    """Generate a diagnostic MCQ question for a skill. Returns None on failure."""
-    difficulty_label = (
-        "advanced" if difficulty > 0.7
-        else "intermediate" if difficulty > 0.4
-        else "foundational"
-    )
-
+    """Generate a single MCQ that tests understanding. Returns None on failure."""
+    level = "advanced" if difficulty > 0.7 else "intermediate" if difficulty > 0.4 else "foundational"
     prompt = (
-        f'Generate ONE {difficulty_label}-level multiple choice question that tests '
-        f'UNDERSTANDING (not recall) of "{skill_name}".\n\n'
-        f"The question should distinguish someone who truly understands from someone "
-        f"who just memorized.\n\n"
-        f"Return ONLY valid JSON (no markdown, no explanation):\n"
-        f'{{"question": "...", "options": ["A", "B", "C", "D"], '
-        f'"correct_answer": 0, "explanation": "Brief explanation."}}\n\n'
-        f"correct_answer is the index (0-3) of the correct option."
+        f'ONE {level}-level MCQ testing deep understanding (not recall) of "{skill_name}".\n'
+        f'JSON only: {{"question":"...","options":["A","B","C","D"],"correct_answer":0,"explanation":"brief"}}\n'
+        f"correct_answer = 0-based index."
     )
-
-    result = await llm_call(prompt, "")
+    result = await llm_call(
+        prompt,
+        default="",
+        max_tokens=300,
+        system="Output ONLY valid JSON. No markdown, no explanation outside the JSON.",
+        temperature=0.3,
+    )
     if not result:
         return None
     try:
         text = result.strip()
         if "```" in text:
-            text = text.split("```")[1]
-            if text.startswith("json"):
-                text = text[4:]
+            import re
+            m = re.search(r"```(?:json)?\s*([\s\S]+?)```", text)
+            text = m.group(1).strip() if m else text.split("```")[1]
         return json.loads(text.strip())
     except Exception:
         return None
@@ -162,35 +149,32 @@ async def generate_competency_questions(
     domain_name: str = "",
     n: int = 3,
 ) -> list[dict]:
-    """
-    Generate n MCQ questions for a competency (any domain). Returns list of question dicts.
-    Results are cached so the same competency is only generated once.
-    """
+    """Generate n MCQs for a competency. Cached per (competency, domain, n)."""
+    desc = f" ({competency_description})" if competency_description else ""
+    domain = domain_name or "this domain"
     prompt = (
-        f'Generate {n} multiple-choice questions that test UNDERSTANDING (not recall) '
-        f'of "{competency_name}" in the context of {domain_name or "the relevant domain"}.\n'
-        f'{f"Competency description: {competency_description}" if competency_description else ""}\n\n'
-        f"Questions should vary in difficulty (easy, medium, hard).\n"
-        f"Each question should reveal whether someone truly understands vs. just memorized.\n\n"
-        f"Return ONLY a JSON array, no markdown:\n"
-        f'[{{"question": "...", "options": ["A","B","C","D"], "correct_answer": 0, '
-        f'"difficulty": 0.3, "explanation": "Brief explanation."}}, ...]\n\n'
-        f"correct_answer is the 0-based index of the correct option. difficulty is 0.0-1.0."
+        f'{n} MCQs testing understanding of "{competency_name}"{desc} in {domain}.\n'
+        f"Vary difficulty across easy/medium/hard.\n"
+        f'JSON array only: [{{"question":"...","options":["A","B","C","D"],"correct_answer":0,"difficulty":0.5,"explanation":"brief"}}]'
     )
-
-    result = await llm_call(prompt, "[]", max_tokens=1500)
+    result = await llm_call(
+        prompt,
+        default="[]",
+        max_tokens=1200,
+        system="Output ONLY a valid JSON array. No markdown, no text outside the array.",
+        temperature=0.3,
+    )
     if not result or result == "[]":
         return []
     try:
         import re
         text = result.strip()
         if "```" in text:
-            match = re.search(r"```(?:json)?\s*([\s\S]+?)```", text)
-            if match:
-                text = match.group(1).strip()
-        match = re.search(r"\[[\s\S]+\]", text)
-        if match:
-            text = match.group(0)
+            m = re.search(r"```(?:json)?\s*([\s\S]+?)```", text)
+            text = m.group(1).strip() if m else text
+        m = re.search(r"\[[\s\S]+\]", text)
+        if m:
+            text = m.group(0)
         questions = json.loads(text)
         return questions if isinstance(questions, list) else []
     except Exception:
@@ -200,17 +184,19 @@ async def generate_competency_questions(
 async def explain_calibration_gap(
     skill_name: str, self_assessed: float, actual: float
 ) -> str:
-    """Generate insight text for a confidence calibration gap."""
     gap_pct = int((self_assessed - actual) * 100)
     prompt = (
-        f'A learner rated themselves {int(self_assessed * 100)}% confident in '
-        f'"{skill_name}" but diagnostic performance shows {int(actual * 100)}% actual '
-        f"mastery — a gap of {gap_pct} percentage points.\n\n"
-        f"Write ONE sentence (max 25 words) explaining why this matters and what to do. "
-        f"Be direct and helpful."
+        f'"{skill_name}": self-rated {int(self_assessed*100)}%, actual {int(actual*100)}% '
+        f"(gap: {gap_pct}pp). One sentence — what this means and what to do."
     )
     default = (
         f"You're {gap_pct}% more confident than your actual performance on "
         f"{skill_name} — review the fundamentals before moving forward."
     )
-    return await llm_call(prompt, default)
+    return await llm_call(
+        prompt,
+        default=default,
+        max_tokens=50,
+        system="You are a calibration coach. One sentence, ≤25 words. Direct and actionable.",
+        temperature=0.4,
+    )

@@ -51,17 +51,18 @@ function DashboardInner() {
     try {
       const activeId = isDemo ? DEMO_LEARNER_ID : getLearnerID()
       if (isDemo) await api.loadDemo()
-      const [graph, ins, recs, state] = await Promise.all([
+      const [graphRes, insRes, recsRes, stateRes] = await Promise.allSettled([
         api.getKnowledgeGraph(activeId),
         api.getInsights(activeId),
         api.getRecommendations(activeId, 5),
         api.getKnowledgeState(activeId),
       ])
-      setNodes(graph.nodes)
-      setLinks(graph.links)
-      setInsights(ins)
-      setRecommendations(recs)
-      setKnowledgeSkills(state.skills ?? {})
+      if (graphRes.status === "fulfilled") { setNodes(graphRes.value.nodes); setLinks(graphRes.value.links) }
+      if (insRes.status === "fulfilled") setInsights(insRes.value)
+      if (recsRes.status === "fulfilled") setRecommendations(recsRes.value)
+      if (stateRes.status === "fulfilled") setKnowledgeSkills(stateRes.value.skills ?? {})
+      const failed = [graphRes, insRes, recsRes, stateRes].filter(r => r.status === "rejected")
+      if (failed.length === 4) throw new Error("Failed to load data. Is the backend running?")
     } catch (e: any) {
       setError(e.message || "Failed to load data. Is the backend running?")
     } finally {
@@ -177,9 +178,15 @@ function DashboardInner() {
                   <div className="text-4xl mb-3">🎯</div>
                   <div className="font-semibold text-slate-700 mb-2">No knowledge graph yet</div>
                   <p className="text-sm text-slate-400 mb-5">Complete onboarding to generate your personalized competency graph.</p>
-                  <a href="/onboard" className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors">
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem("skillpulse:goal")
+                      window.location.href = "/onboard"
+                    }}
+                    className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors"
+                  >
                     Start Onboarding →
-                  </a>
+                  </button>
                 </div>
               </div>
             ) : (

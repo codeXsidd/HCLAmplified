@@ -131,10 +131,49 @@ def self_assess(body: SelfAssessmentRequest):
         store["learner_skill_states"][body.learner_id][item.skill_name] = state
         _persist_skill_state(state)
 
+    # Mark onboarding complete
+    learner = store["learners"].get(body.learner_id, {})
+    learner["onboarding_complete"] = True
+    store["learners"][body.learner_id] = learner
+    _persist_learner(learner)
+
     return {
         "message": "Self-assessment recorded",
         "skills_assessed": len(body.assessments),
     }
+
+
+@router.post("/clear-progress")
+def clear_progress(learner_id: str):
+    """Clear all learning data for a learner so they can re-onboard fresh."""
+    store = get_memory_store()
+
+    # Clear in-memory state
+    store["learner_skill_states"].pop(learner_id, None)
+    learner = store["learners"].get(learner_id, {})
+    learner["domain_pack_id"] = None
+    learner["goal"] = None
+    learner["onboarding_complete"] = False
+    store["learners"][learner_id] = learner
+
+    # Clear from DB
+    try:
+        from app.models.db_models import LearnerSkillState, Learner
+        db = SessionLocal()
+        db.query(LearnerSkillState).filter(
+            LearnerSkillState.learner_id == learner_id
+        ).delete()
+        row = db.get(Learner, learner_id)
+        if row:
+            row.domain_pack_id = None
+            row.goal = None
+            row.onboarding_complete = False
+        db.commit()
+        db.close()
+    except Exception as e:
+        print(f"[onboarding] clear_progress DB failed: {e}")
+
+    return {"message": "Progress cleared", "learner_id": learner_id}
 
 
 def _persist_demo_state(learner_id: str, learner: dict, skill_states: dict) -> None:

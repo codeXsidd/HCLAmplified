@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
@@ -16,28 +16,11 @@ export default function AppNav() {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [displayName, setDisplayName] = useState("")
-  const [editingName, setEditingName] = useState(false)
-  const [nameInput, setNameInput] = useState("")
-  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const name = localStorage.getItem("skillpulse:name") || ""
     setDisplayName(name)
-    setNameInput(name)
   }, [])
-
-  useEffect(() => {
-    if (editingName) inputRef.current?.focus()
-  }, [editingName])
-
-  const saveName = () => {
-    const trimmed = nameInput.trim()
-    if (trimmed) {
-      localStorage.setItem("skillpulse:name", trimmed)
-      setDisplayName(trimmed)
-    }
-    setEditingName(false)
-  }
 
   const avatarChar = displayName ? displayName[0].toUpperCase() : "?"
 
@@ -70,28 +53,10 @@ export default function AppNav() {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          {editingName ? (
-            <input
-              ref={inputRef}
-              value={nameInput}
-              onChange={(e) => setNameInput(e.target.value)}
-              onBlur={saveName}
-              onKeyDown={(e) => { if (e.key === "Enter") saveName(); if (e.key === "Escape") setEditingName(false) }}
-              className="hidden sm:block px-2.5 py-1 text-xs border border-indigo-300 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-200 w-32"
-              maxLength={40}
-            />
-          ) : (
-            <button
-              onClick={() => setEditingName(true)}
-              className="hidden sm:inline px-2.5 py-1 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-slate-600 hover:text-indigo-700 text-xs font-medium rounded-full transition-colors"
-              title="Click to edit your name"
-            >
-              {displayName || "Set name"}
-            </button>
-          )}
           <Link
             href="/profile"
             className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-sm font-semibold text-indigo-700 hover:bg-indigo-200 transition-colors"
+            title="Profile & Settings"
           >
             {avatarChar}
           </Link>

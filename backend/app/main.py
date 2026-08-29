@@ -40,6 +40,7 @@ def _sync_db_to_memory():
                 "id": row.id,
                 "name": row.name,
                 "goal": row.goal,
+                "domain_pack_id": row.domain_pack_id,
                 "onboarding_complete": row.onboarding_complete,
             }
         for row in db.query(LearnerSkillState).all():
@@ -52,6 +53,7 @@ def _sync_db_to_memory():
                 "beta_param": row.beta_param,
                 "mastery_estimate": row.mastery_estimate,
                 "self_assessed_confidence": row.self_assessed_confidence,
+                "evidence_source": row.evidence_source or "none",
                 "half_life_days": row.half_life_days,
                 "last_practiced_at": row.last_practiced_at.isoformat() if row.last_practiced_at else None,
                 "practice_count": row.practice_count,

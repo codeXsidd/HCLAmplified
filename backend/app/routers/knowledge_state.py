@@ -85,13 +85,23 @@ def _get_active_graph(learner_id: str):
         from app.services.domain_service import get_pack_by_id
         db = SessionLocal()
         row = db.get(Learner, learner_id)
-        db.close()
         if row and row.domain_pack_id:
             pack = get_pack_by_id(row.domain_pack_id)
             if pack:
+                db.close()
                 return DomainGraph(pack["pack_data"])
-    except Exception:
-        pass
+            # Orphaned domain_pack_id — pack was never saved to DB; clear it so
+            # the learner is prompted to re-onboard rather than stuck on an empty graph
+            print(f"[knowledge_state] Orphaned domain_pack_id '{row.domain_pack_id}' for {learner_id} — clearing")
+            row.domain_pack_id = None
+            db.commit()
+            store = get_memory_store()
+            learner = store["learners"].get(learner_id, {})
+            learner["domain_pack_id"] = None
+            store["learners"][learner_id] = learner
+        db.close()
+    except Exception as e:
+        print(f"[knowledge_state] _get_active_graph failed for {learner_id}: {e}")
     return skill_graph if learner_id == _DEMO_LEARNER_ID else None
 
 
